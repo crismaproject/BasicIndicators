@@ -1,37 +1,11 @@
 #!/usr/bin/env python
 
-# receive events from orion Pub/Sup
-# this are XML POST requests
 
-""" register this as Listener in PubSub:
-
-endpoint="http://crisma.ait.ac.at/orion"
-
-(curl $endpoint/NGSI10/subscribeContext -s -S --header 'Content-Type: application/xml' -d @- | xmllint --format - | tee subscribeContext.xml) <<EOF
-<?xml version="1.0"?>
-<subscribeContextRequest>
-  <entityIdList>
-    <entityId type="WorldState" isPattern="true">
-      <id>.*</id>
-    </entityId>
-  </entityIdList>
-  <attributeList>
-    <attribute>creation</attribute>
-  </attributeList>
-  <reference>http://crisma.ait.ac.at/indicators/OrionListener.py</reference>
-  <duration>P3Y</duration>
-  <notifyConditions>
-    <notifyCondition>
-      <type>ONCHANGE</type>
-       <condValueList>
-        <condValue>creation</condValue>
-       </condValueList>
-     </notifyCondition>
-   </notifyConditions>
-  <throttling>PT3S</throttling>
-</subscribeContextRequest>
-EOF
-
+""" 
+ receive events from orion Pub/Sup (XML POST requests)
+ Calculate indicator values:
+  lifeIndicator
+ Send PubSub event about new data
 """
 
 import os, sys
@@ -41,7 +15,7 @@ import string
 import time
 from sys import stderr
 
-print "Content-Type: text/plain"     # HTML is following
+print "Content-Type: text/plain"    # HTML is following
 print                               # blank line, end of headers
 print "<!-- The OrionBroker Listener says: Thanks for your message -->"
 
@@ -90,7 +64,7 @@ print >>stderr, "OrionListener got a {}".format (root.tag)
 
 
 
-wps = "http://crisma.ait.ac.at/wps/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIndicator&datainputs=WorldStateId={}"
+wps = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIndicator&datainputs=WorldStateId={}"
 orion = "http://crisma.ait.ac.at/orion/NGSI10/updateContext"
 
 if "notifyContextRequest" == root.tag:
