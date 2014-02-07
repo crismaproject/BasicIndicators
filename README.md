@@ -21,7 +21,7 @@ Simple CRISMA indicators, WPS and Pub/Sub integration
 
 ## sudo make install
 
-## Test the installation with the provided test-pages.
+## Test the installation with the provided test-page
    
 
 

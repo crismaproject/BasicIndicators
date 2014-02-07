@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!--
-/home/peter/public_html/wps/lifeIndicator.html
+/home/peter/public_html/wps/indicators.html
 Peter Kutschera, Wed Sep 11 12:43:30 2013$
 $Id$
-Time-stamp: "2014-02-06 13:52:21 peter"
+Time-stamp: "2014-02-07 10:04:00 peter"
 Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
 -->
 
@@ -28,7 +28,7 @@ Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
 <html>
 <head>
 <meta name="Author" content="Peter.Kutschera@ait.ac.at">
-<title>lifeIndicator test-page</title>
+<title>Indicators test-page</title>
 <style type="text/css">
  <!--
   .big { font-size:20pt }
@@ -37,9 +37,15 @@ Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
 <script src="jquery-1.10.2.min.js"></script>
 <script type="text/javascript">
   $(document).ready(function(){
-    $("button").click(function(){
+    $("#describe").click(function(){
+     var indicator = $("#indicator").val();
+     var url = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=DescribeProcess&version=1.0.0&identifier=" + indicator;
+     window.open (url); 
+    });
+    $("#execute").click(function(){
+     var indicator = $("#indicator").val();
      var wsid = $("#wsid").val();
-     var url = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIndicator&datainputs=WorldStateId=" + wsid;
+     var url = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=" + indicator + "&datainputs=WorldStateId=" + wsid;
      window.open (url); 
     });
   });
@@ -53,13 +59,13 @@ Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
 <p>
 
 This example asks the Pilot C Object-Of-Interest WorldState Repository (OOI-WSR) server for entities for a given WorldState.
-The indicator is calculated from the life status of all patients.
+The indicator is calculated for this WorldState.
 The result is stored (in the moment in the same WorldState repository) and the URI of the result is returned by the WPS
 
 <p>
-<h3>Workflow (For the lifeIndicator, but it is the same for most external simulation models):</h3>
+<h3>Workflow (For the indicator, but it is the same for most external simulation models):</h3>
 <ol>
-<li> Request to lifeIndicator (PyWPS in this case) to calculate an indicater for a particular WorldState.
+<li> Request to indicator service (PyWPS in this case) to calculate an indicater for a particular WorldState.
 <li> To calculate the indicator input data is needed. But only the indicator service knows which one is needed. So instead of pushing the input data (well, all data!) to the model the model asks for (and only for) whatever it needs (from OOI-WSR using CRISMA REST interface)
 <li> Model calculates indicator value and stores it in OOI-WSR
 <li> Model (WPS) returns URI to access result
@@ -67,14 +73,20 @@ The result is stored (in the moment in the same WorldState repository) and the U
 
 More details can be found in <a href="https://crisma-cat.ait.ac.at/component/lifeIndicator">the CRISMA catalogue</a>.
 
-<h3>Access to the lifeIndicator (WPS):</h3>
+<h3>Access to the indicators (WPS):</h3>
 <ol>
 <li> <a href='http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=GetCapabilities'>GetCapabilities</a> describes the WPS instance and lists all models (e.g. indicators) available
-<li> <a href='http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=DescribeProcess&version=1.0.0&identifier=lifeIndicator'>DescribeProcess</a> delivers a description of the lifeIndicator process
+  <br> Indicator to use: 
+   <select id='indicator'>
+     <option>lifeIndicator</option>
+     <option selected>deathsIndicator</option>
+   </select>
+<li> <button id='describe'>DescribeProcess</button> delivers a description of the selecteIndicator process (indicator)
 <li> 
 WordStateId=
 <input type="text" id="wsid" value="1"> 
-<button>Execute</button> the lifeIndicator process
+<br>
+<button id='execute'>Execute</button> the selected indicator process for the given WorldState
 </ol>
 
 

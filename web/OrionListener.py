@@ -80,33 +80,31 @@ print >>stderr, "OrionListener got a {}".format (root.tag)
 # </notifyContextRequest>
 
 
-
-wps = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIndicator&datainputs=WorldStateId={}"
+indicators = [
+    # 'lifeIndicator', 
+    'deathsIndicator'
+    ]
+wps = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier={}&datainputs=WorldStateId={}"
 orion = "http://crisma.ait.ac.at/orion/NGSI10/updateContext"
 
 if "notifyContextRequest" == root.tag:
     # We are only registered for "creation" updates, so no need to check for this
-    # new WorldState
-    # trigger indicator calculation
+    # get id of new WorldState
     idElem = root.find ("./contextResponseList/contextElementResponse/contextElement/entityId/id")
     wsid = idElem.text
-    response = requests.get(wps.format (wsid))
-    print >>stderr, response.text
-    xmlheaderlen = len ('<?xml version="1.0" encoding="utf-8"?>')
-    result = etree.fromstring (response.text[xmlheaderlen:])
-    # successElem = result.find ("{http://www.opengis.net/wps/1.0.0}ExecuteResponse/{http://www.opengis.net/wps/1.0.0}Status/{http://www.opengis.net/wps/1.0.0}ProcessSucceeded")
-    successElem = result.find (".//{http://www.opengis.net/wps/1.0.0}ProcessSucceeded")
-    if successElem is not None:
-        # dataElem = result.find ("{http://www.opengis.net/wps/1.0.0}ExecuteResponse/{http://www.opengis.net/wps/1.0.0}ProcessOutputs/{http://www.opengis.net/wps/1.0.0}Output/{http://www.opengis.net/wps/1.0.0}Data/{http://www.opengis.net/wps/1.0.0}LiteralData")
-        dataElem = result.find (".//{http://www.opengis.net/wps/1.0.0}LiteralData")
-        uri = dataElem.text
-        # print >>stderr, uri
-        
-        # ooiid = uri[string.rfind (uri, '/')+1:]
 
-        # print >>stderr, ooiid
-
-        psRequest = """<?xml version="1.0" encoding="UTF-8"?>
+    # trigger indicator calculations
+    for indicator in indicators:
+        response = requests.get(wps.format (indicator, wsid))
+        print >>stderr, response.text
+        xmlheaderlen = len ('<?xml version="1.0" encoding="utf-8"?> ')
+        result = etree.fromstring (response.text[xmlheaderlen:])
+        successElem = result.find (".//{http://www.opengis.net/wps/1.0.0}ProcessSucceeded")
+        if successElem is not None:
+            dataElem = result.find (".//{http://www.opengis.net/wps/1.0.0}LiteralData")
+            uri = dataElem.text
+            # print >>stderr, uri
+            psRequest = """<?xml version="1.0" encoding="UTF-8"?>
 <updateContextRequest>
   <contextElementList>
     <contextElement>
@@ -115,7 +113,7 @@ if "notifyContextRequest" == root.tag:
       </entityId>
       <contextAttributeList>
         <contextAttribute>
-          <name>lifeIndicator</name>
+          <name>{}</name>
           <type>indicator</type>
           <contextValue>{} {}</contextValue>
         </contextAttribute>
@@ -123,14 +121,14 @@ if "notifyContextRequest" == root.tag:
     </contextElement>
   </contextElementList>
   <updateAction>APPEND</updateAction>
-</updateContextRequest>""".format (wsid, time.time(), uri)
+</updateContextRequest>""".format (wsid, indicator, time.time(), uri)
 
-        #print >>stderr, psRequest
+            #print >>stderr, psRequest
         
-        # (curl $endpoint/NGSI10/updateContext -s -S --header 'Content-Type: application/xml' -d @- | xmllint --format - ) <<EOF
+            # (curl $endpoint/NGSI10/updateContext -s -S --header 'Content-Type: application/xml' -d @- | xmllint --format - ) <<EOF
 
-        answer = requests.post (orion, data=psRequest, headers={'Content-Type' : 'application/xml'})
+            answer = requests.post (orion, data=psRequest, headers={'Content-Type' : 'application/xml'})
 
-        #print >>stderr, answer.text
+            #print >>stderr, answer.text
 
 

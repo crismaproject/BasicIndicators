@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Peter Kutschera, Thu Feb  6 12:42:00 2014
+# Time-stamp: "2014-02-07 08:15:00 peter"
 
 #    Copyright (C) 2014  AIT / Austrian Institute of Technology
 #    http://www.ait.ac.at
