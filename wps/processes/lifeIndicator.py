@@ -1,12 +1,13 @@
 """
+Peter Kutschera, 2013-09-11
+Time-stamp: "2014-02-07 08:51:17 peter"
+
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
 &service=WPS
 &version=1.0.0
 &identifier=lifeIndicator
 &datainputs=WorldStateId=21
-
-2013-09-11, Peter.Kutschera@ait.ac.at
 
 Needs an recent requests library:
 pip install requests --upgrade
@@ -144,7 +145,43 @@ class Process(WPSProcess):
         
         self.status.set("Calculated indicator for WorldState with id {}: {}".format (worldStateId, json.dumps (numberOfPatients)), 90)
 
+        # create indicator value structure
+        indicatorData = {
+            'id': "lifeIndicator",
+            'name': "health status summary",
+            'description': "Life status categoized and summed up per category",
+            'worldstates': [worldStateId],
+            'type': "histogram",
+            'data': [
+                {
+                    "key": "dead",
+                    "value": numberOfPatients['dead'],
+                    "desc": "life status below 10",
+                    "color": "#000000"
+                    },
+                {
+                    "key": "red",
+                    "value": numberOfPatients['red'],
+                    "desc" : "life status 10..50",
+                    "color" : "#ff0000"
+                    },
+                {
+                    "key" : "yellow",
+                    "value" : numberOfPatients['yellow'],
+                    "desc" : "life status 50..85",
+                    "color" : "yellow"
+                    },
+                {
+                    'key': "green",
+                    "value" : numberOfPatients['green'],
+                    'desc' : "live status 85 or better",
+                    "color" : "#00FF00"
+                    }
+                ]
+            }
+
         # write result to OOI-WSR
+        #indicatorValue = json.dumps (indicatorData)
         indicatorValue = json.dumps (numberOfPatients)
 
         indicatorProperty = {
@@ -153,7 +190,7 @@ class Process(WPSProcess):
             "entityPropertyValue": indicatorValue,
             "worldStateId": worldStateId,
             }
-        # print >> stderr, json.dumps (indicatorProperty)
+        print >> stderr, json.dumps (indicatorProperty)
 
         if existingResults == 1:
             indicatorProperty["entityPropertyId"] = existingResult
