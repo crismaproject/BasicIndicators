@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-02-07 08:51:17 peter"
+Time-stamp: "2014-02-07 11:00:46 peter"
 
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
@@ -57,6 +57,9 @@ class Process(WPSProcess):
         self.Answer=self.addLiteralOutput(identifier = "indicator",
                                           type = type (""),
                                           title = "URL to access indicator")
+        self.value=self.addLiteralOutput(identifier = "value",
+                                          type = type (""),
+                                          title = "indicator value")
 
                                            
     def execute(self):
@@ -179,6 +182,8 @@ class Process(WPSProcess):
                     }
                 ]
             }
+
+        self.value.setValue (json.dumps (indicatorData))
 
         # write result to OOI-WSR
         #indicatorValue = json.dumps (indicatorData)

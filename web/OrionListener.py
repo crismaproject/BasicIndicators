@@ -101,10 +101,13 @@ if "notifyContextRequest" == root.tag:
         result = etree.fromstring (response.text[xmlheaderlen:])
         successElem = result.find (".//{http://www.opengis.net/wps/1.0.0}ProcessSucceeded")
         if successElem is not None:
-            dataElem = result.find (".//{http://www.opengis.net/wps/1.0.0}LiteralData")
-            uri = dataElem.text
-            # print >>stderr, uri
-            psRequest = """<?xml version="1.0" encoding="UTF-8"?>
+            identifierElems = result.findall (".//{http://www.opengis.net/wps/1.0.0}Output/{http://www.opengis.net/ows/1.1}Identifier")
+            for elem in identifierElems:
+                if elem.text == 'indicator':
+                    dataElem = elem.find ("../{http://www.opengis.net/wps/1.0.0}Data/{http://www.opengis.net/wps/1.0.0}LiteralData")
+                    uri = dataElem.text
+                    # print >>stderr, uri
+                    psRequest = """<?xml version="1.0" encoding="UTF-8"?>
 <updateContextRequest>
   <contextElementList>
     <contextElement>
@@ -123,12 +126,12 @@ if "notifyContextRequest" == root.tag:
   <updateAction>APPEND</updateAction>
 </updateContextRequest>""".format (wsid, indicator, time.time(), uri)
 
-            #print >>stderr, psRequest
+                    #print >>stderr, psRequest
         
-            # (curl $endpoint/NGSI10/updateContext -s -S --header 'Content-Type: application/xml' -d @- | xmllint --format - ) <<EOF
+                    # (curl $endpoint/NGSI10/updateContext -s -S --header 'Content-Type: application/xml' -d @- | xmllint --format - ) <<EOF
 
-            answer = requests.post (orion, data=psRequest, headers={'Content-Type' : 'application/xml'})
+                    answer = requests.post (orion, data=psRequest, headers={'Content-Type' : 'application/xml'})
 
-            #print >>stderr, answer.text
+                    #print >>stderr, answer.text
 
 
