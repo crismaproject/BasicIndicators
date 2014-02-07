@@ -82,7 +82,8 @@ print >>stderr, "OrionListener got a {}".format (root.tag)
 
 indicators = [
     # 'lifeIndicator', 
-    'deathsIndicator'
+    'deathsIndicator',
+    # seriouslyDeterioratedIndicator,
     ]
 wps = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier={}&datainputs=WorldStateId={}"
 orion = "http://crisma.ait.ac.at/orion/NGSI10/updateContext"

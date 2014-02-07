@@ -1,12 +1,12 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-02-07 12:50:44 peter"
+Time-stamp: "2014-02-07 11:55:06 peter"
 
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
 &service=WPS
 &version=1.0.0
-&identifier=lifeIndicator
+&identifier=seriouslyDeterioratedIndicator
 &datainputs=WorldStateId=21
 
 Needs an recent requests library:
@@ -44,13 +44,13 @@ class Process(WPSProcess):
         # init process
         WPSProcess.__init__(
             self,
-            identifier="lifeIndicator", #the same as the file name
+            identifier="seriouslyDeterioratedIndicator", #the same as the file name
             version = "1.0",
-            title="Some indicator of the given world state",
+            title="Seriously deteriorated patients",
             storeSupported = "false",
             statusSupported = "false",
-            abstract="Fetch needed WorldState data and calculate an indicator",
-            grassLocation =False)
+            abstract="Number of patients with (actual health) less than (health at the beginning - 50)",
+            grassLocation = False)
         self.WorldState = self.addLiteralInput (identifier = "WorldStateId",
                                                 # type = type(""), # default: integer
                                                 title = "One particular WorldState")
@@ -69,17 +69,28 @@ class Process(WPSProcess):
         indicatorEntityId = 101
         indicatorPropertyId = 60
         baseUrl = 'http://crisma-ooi.ait.ac.at/api/EntityProperty'
-
-        self.status.set("baseUrl = {}".format (baseUrl), 1)
+        worldStateUrl = 'http://crisma-ooi.ait.ac.at/api/WorldState'
+        headers = {'content-type': 'application/json'}
 
         worldStateId = self.WorldState.getValue();
-        self.status.set("Check WorldState {} status".format (worldStateId), 10)
+        self.status.set("Actual WorldState: {}".format (worldStateId), 10)
+
+        # get list of WorldStates to find base WorldState
+        worldStateList = requests.get (worldStateUrl);
+        if worldStateList.status_code != 200:
+            return "Error accessing WorldState list: {}".format (response.raise_for_status())
+
+        baseWorldStateId = findBaseId (worldStateId, worldStateList.json())
+        
+        if baseWorldStateId is None:
+            return "Base WorldState not found for actual WorldState = {}".format (worldStateId)
+
+        self.status.set("Base WorldState: {}".format (baseWorldStateId), 15)
 
         params = {
             'wsid' :  worldStateId, 
             'etpid' : indicatorPropertyId
             }
-        headers = {'content-type': 'application/json'}
         indicatorProperties = requests.get(baseUrl, params=params, headers=headers) 
 
         print >> stderr, indicatorProperties
@@ -109,85 +120,76 @@ class Process(WPSProcess):
             pass
 
 
-        self.status.set("Start collecting input data for WorldState = {}".format (worldStateId), 10)
 
         # patients and their life state
-        numberOfPatients = {'sum' : 0, 'green' : 0, 'yellow': 0, 'red' : 0, 'dead' : 0}
-        requiredLifePropertyValue = {'green': 85, 'yellow': 50, 'red' : 10} # below 'red': 'dead'
+        numberOfDeteriorated = 0;
 
+        # base data:
+        self.status.set("Request input data for WorldState = {}".format (baseWorldStateId), 20)
+        params = {
+            'wsid' :  baseWorldStateId, 
+            'etpid' : patientLifePropertyId
+            }
+        baseEntityProperties = requests.get(baseUrl, params=params) 
 
+        # actual data
+        self.status.set("Request input data for WorldState = {}".format (worldStateId), 21)
         params = {
             'wsid' :  worldStateId, 
             'etpid' : patientLifePropertyId
             }
         entityProperties = requests.get(baseUrl, params=params) 
 
-        self.status.set("Got WorldState data", 50)
+        self.status.set("Got WorldState data", 22)
 
-        for ep in entityProperties.json():
+        patients = {}
+
+        for ep in baseEntityProperties.json():
             # Needs to be int (0..100). If not this is an error. Just silently skip to get an result anyway!
             if ep["entityTypeProperty"]['entityTypePropertyType'] != 1: 
-                print >> stderr, "Patient life property is not of type 1 (integer)!"
+                # print >> stderr, "Patient life property is not of type 1 (integer)!"
                 continue 
             # The entityTypePropertyType might be a lie
             try:
                 life = int (ep["entityPropertyValue"])
-                numberOfPatients['sum'] += 1
-                if life >= requiredLifePropertyValue['green']:
-                    numberOfPatients['green'] += 1
-                elif life >= requiredLifePropertyValue['yellow']:
-                    numberOfPatients['yellow'] += 1
-                elif life >= requiredLifePropertyValue['red']:
-                    numberOfPatients['red'] += 1
-                else:
-                    numberOfPatients['dead'] += 1
+                patients[ep["entityPropertyId"]] = life
             except:
-                print >> stderr, ep["entityPropertyValue"], " is not an integer!"
+                # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
                 # ignore problem !?!?
                 pass
+        for ep in entityProperties.json():
+            # Needs to be int (0..100). If not this is an error. Just silently skip to get an result anyway!
+            if ep["entityTypeProperty"]['entityTypePropertyType'] != 1: 
+                # print >> stderr, "Patient life property is not of type 1 (integer)!"
+                continue 
+            # The entityTypePropertyType might be a lie
+            try:
+                life = int (ep["entityPropertyValue"])
+                if life < patients[ep["entityPropertyId"]] - 50:
+                    numberOfDeteriorated += 1
+            except:
+                # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
+                # ignore problem !?!?
+                pass
+
         
-        self.status.set("Calculated indicator for WorldState with id {}: {}".format (worldStateId, json.dumps (numberOfPatients)), 90)
+        self.status.set("Calculated deathsIndicator for WorldState with id {}: {}".format (worldStateId, numberOfDeteriorated), 90)
 
         # create indicator value structure
         indicatorData = {
-            'id': "lifeIndicator",
-            'name': "health status summary",
-            'description': "Life status categoized and summed up per category",
-            'worldstates': [worldStateId],
-            'type': "histogram",
-            'data': [
-                {
-                    "key": "dead",
-                    "value": numberOfPatients['dead'],
-                    "desc": "life status below 10",
-                    "color": "#000000"
-                    },
-                {
-                    "key": "red",
-                    "value": numberOfPatients['red'],
-                    "desc" : "life status 10..50",
-                    "color" : "#ff0000"
-                    },
-                {
-                    "key" : "yellow",
-                    "value" : numberOfPatients['yellow'],
-                    "desc" : "life status 50..85",
-                    "color" : "yellow"
-                    },
-                {
-                    'key': "green",
-                    "value" : numberOfPatients['green'],
-                    'desc' : "live status 85 or better",
-                    "color" : "#00FF00"
-                    }
-                ]
+            'id': "seriouslyDeterioratedIndicator",
+            'name': "Seriously deteriorated",
+            'description': "Number of patients with actual life status less then base life status - 50",
+            'worldstates': [baseWorldStateId, worldStateId],
+            'type': "number",
+            'data': numberOfDeteriorated
             }
 
         self.value.setValue (json.dumps (indicatorData))
 
         # write result to OOI-WSR
         #indicatorValue = json.dumps (indicatorData)
-        indicatorValue = json.dumps (numberOfPatients)
+        indicatorValue = indicatorData['data']
 
         indicatorProperty = {
             "entityId" : indicatorEntityId,
@@ -218,3 +220,19 @@ class Process(WPSProcess):
 
         return
 
+
+def findParentId (id, list):
+    """Go throu list and find id of parent worldstate for given worldstate id"""
+    for e in list:
+        if e['worldStateId'] == id:
+            return e['worldStateParentId']
+    return None;
+
+
+def findBaseId (id, list):
+    """Go up the list of parents till the beginning"""
+    parent = findParentId (id, list)
+    while parent is not None:
+        id = parent
+        parent = findParentId (id, list)
+    return id
