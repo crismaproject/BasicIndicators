@@ -1,12 +1,12 @@
 """
-Peter Kutschera, 2013-09-11
-Time-stamp: "2014-02-10 14:55:03 peter"
+Peter Kutschera, 2014-02-10
+Time-stamp: "2014-02-10 14:56:03 peter"
 
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
 &service=WPS
 &version=1.0.0
-&identifier=seriouslyDeterioratedIndicator
+&identifier=improvedIndicator
 &datainputs=WorldStateId=21
 
 Needs an recent requests library:
@@ -44,12 +44,12 @@ class Process(WPSProcess):
         # init process
         WPSProcess.__init__(
             self,
-            identifier="seriouslyDeterioratedIndicator", #the same as the file name
+            identifier="improvedIndicator", #the same as the file name
             version = "1.0",
-            title="Seriously deteriorated patients",
+            title="Improved patients",
             storeSupported = "false",
             statusSupported = "false",
-            abstract="Number of patients with (actual health) less than (health at the beginning - 50)",
+            abstract="Number of patients with actual health better or equal as at the beginning",
             grassLocation = False)
         self.WorldState = self.addLiteralInput (identifier = "WorldStateId",
                                                 # type = type(""), # default: integer
@@ -67,7 +67,7 @@ class Process(WPSProcess):
         patientTypeId = 10         #is this sufficient or might there be subclasses?
         patientLifePropertyId = 42
         indicatorEntityId = 101
-        indicatorPropertyId = 62
+        indicatorPropertyId = 63
         baseUrl = 'http://crisma-ooi.ait.ac.at/api/EntityProperty'
         worldStateUrl = 'http://crisma-ooi.ait.ac.at/api/WorldState'
         headers = {'content-type': 'application/json'}
@@ -122,7 +122,7 @@ class Process(WPSProcess):
 
 
         # patients and their life state
-        numberOfDeteriorated = 0;
+        numberOfImproved = 0;
 
         # base data:
         self.status.set("Request input data for WorldState = {}".format (baseWorldStateId), 20)
@@ -165,24 +165,24 @@ class Process(WPSProcess):
             # The entityTypePropertyType might be a lie
             try:
                 life = int (ep["entityPropertyValue"])
-                if life < patients[ep["entityId"]] - 50:
-                    numberOfDeteriorated += 1
+                if life >= patients[ep["entityId"]]:
+                    numberOfImproved += 1
             except:
                 # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
                 # ignore problem !?!?
                 pass
 
         
-        self.status.set("Calculated seriouslyDeterioratedIndicator for WorldState with id {}: {}".format (worldStateId, numberOfDeteriorated), 90)
+        self.status.set("Calculated improvedIndicator for WorldState with id {}: {}".format (worldStateId, numberOfImproved), 90)
 
         # create indicator value structure
         indicatorData = {
-            'id': "seriouslyDeterioratedIndicator",
-            'name': "Seriously deteriorated",
-            'description': "Number of patients with actual life status less then base life status - 50",
+            'id': "improvedIndicator",
+            'name': "improved",
+            'description': "Number of patients with actual life status better or equal then base life status",
             'worldstates': [baseWorldStateId, worldStateId],
             'type': "number",
-            'data': numberOfDeteriorated
+            'data': numberOfImproved
             }
 
         self.value.setValue (json.dumps (indicatorData))

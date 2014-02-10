@@ -1,7 +1,7 @@
 ############################################################
 # /home/peter/_work/CRISMA-sw/indicators-py/Makefile
 # Peter Kutschera, Thu Feb  6 12:42:00 2014
-# Time-stamp: "2014-02-07 11:50:06 peter"
+# Time-stamp: "2014-02-10 14:57:41 peter"
 # 
 # Peter.Kutschera@ait.ac.at
 #
@@ -36,6 +36,7 @@ install_wps:
 	install -p wps/processes/lifeIndicator.py $(WPS_DIR)/processes
 	install -p wps/processes/deathsIndicator.py $(WPS_DIR)/processes
 	install -p wps/processes/seriouslyDeterioratedIndicator.py $(WPS_DIR)/processes
+	install -p wps/processes/improvedIndicator.py $(WPS_DIR)/processes
 
 install_web:
 	@echo "Setup web page"
