@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-02-07 11:55:06 peter"
+Time-stamp: "2014-02-10 13:39:21 peter"
 
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
@@ -67,7 +67,7 @@ class Process(WPSProcess):
         patientTypeId = 10         #is this sufficient or might there be subclasses?
         patientLifePropertyId = 42
         indicatorEntityId = 101
-        indicatorPropertyId = 60
+        indicatorPropertyId = 62
         baseUrl = 'http://crisma-ooi.ait.ac.at/api/EntityProperty'
         worldStateUrl = 'http://crisma-ooi.ait.ac.at/api/WorldState'
         headers = {'content-type': 'application/json'}
@@ -152,7 +152,7 @@ class Process(WPSProcess):
             # The entityTypePropertyType might be a lie
             try:
                 life = int (ep["entityPropertyValue"])
-                patients[ep["entityPropertyId"]] = life
+                patients[ep["entityId"]] = life
             except:
                 # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
                 # ignore problem !?!?
@@ -165,7 +165,7 @@ class Process(WPSProcess):
             # The entityTypePropertyType might be a lie
             try:
                 life = int (ep["entityPropertyValue"])
-                if life < patients[ep["entityPropertyId"]] - 50:
+                if life < patients[ep["entityId"]] - 50:
                     numberOfDeteriorated += 1
             except:
                 # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
@@ -188,8 +188,8 @@ class Process(WPSProcess):
         self.value.setValue (json.dumps (indicatorData))
 
         # write result to OOI-WSR
-        #indicatorValue = json.dumps (indicatorData)
-        indicatorValue = indicatorData['data']
+        indicatorValue = json.dumps (indicatorData)
+        #indicatorValue = indicatorData['data']
 
         indicatorProperty = {
             "entityId" : indicatorEntityId,

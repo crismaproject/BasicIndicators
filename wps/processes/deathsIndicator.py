@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-02-07 10:44:06 peter"
+Time-stamp: "2014-02-10 13:39:39 peter"
 
 The server gets an world state id and calculates an indicator
 ../wps.py?request=Execute
@@ -67,7 +67,7 @@ class Process(WPSProcess):
         patientTypeId = 10         #is this sufficient or might there be subclasses?
         patientLifePropertyId = 42
         indicatorEntityId = 101
-        indicatorPropertyId = 60
+        indicatorPropertyId = 61
         baseUrl = 'http://crisma-ooi.ait.ac.at/api/EntityProperty'
 
         self.status.set("baseUrl = {}".format (baseUrl), 1)
@@ -154,8 +154,8 @@ class Process(WPSProcess):
         self.value.setValue (json.dumps (indicatorData))
 
         # write result to OOI-WSR
-        #indicatorValue = json.dumps (indicatorData)
-        indicatorValue = indicatorData['data']
+        indicatorValue = json.dumps (indicatorData)
+        #indicatorValue = indicatorData['data']
 
         indicatorProperty = {
             "entityId" : indicatorEntityId,
