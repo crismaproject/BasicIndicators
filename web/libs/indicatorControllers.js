@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-11 19:41:47 peter"
+ Time-stamp: "2014-02-14 11:13:07 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -25,6 +25,7 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
     $scope.worldStateList = [];
     $scope.baselines = [];
     $scope.baseline = null;
+    $scope.baselineSelected = 0;
 
     $scope.selectedWorldStates = [];
     $scope.indicators = {};
@@ -73,6 +74,7 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
 	    alert ("No WorldState selected!");
 	} else {
 	    createWorldStateTree("#worldstate-tree", $scope.baseline.worldStateId, $scope.worldStateList, $scope.selectWorldStates);
+	    $scope.baselineSelected = 1;
 	}
     };
 

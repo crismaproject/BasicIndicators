@@ -1,7 +1,7 @@
 <DOCTYPE html5>
 <!--
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-11 16:44:51 peter"
+ Time-stamp: "2014-02-14 11:12:38 peter"
 -->
 <!--
     Copyright (C) 2014  AIT / Austrian Institute of Technology
@@ -44,13 +44,16 @@
 <body ng-controller="IndicatorCtrl">
     <table class="table">
       <tr>
-	<td id="table">Baseline WorldState:</td>
+	<td id="table">Select a baseline WorldState:</td>
 	<td><select ng-model="baseline" ng-options="s.worldStateId for s in baselines"></select></td>
 	<td><button type="button" class="btn btn-primary" ng-click="createWorldStateTree()">Show WorldState tree</button></td>
       </tr>
     </table>
 
-    <div id="worldstate-tree"></div>
+    <table class="table">
+      <tr><td ng-if="baselineSelected">Select one (click) or more (control klick) WorldStates:</td></tr>
+      <tr><td><div id="worldstate-tree"></div></td></tr>
+    </table>
 
     <p>
 

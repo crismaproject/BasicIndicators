@@ -1,7 +1,7 @@
 ############################################################
 # /home/peter/_work/CRISMA-sw/indicators-py/Makefile
 # Peter Kutschera, Thu Feb  6 12:42:00 2014
-# Time-stamp: "2014-02-14 11:01:10 peter"
+# Time-stamp: "2014-02-14 11:02:14 peter"
 # 
 # Peter.Kutschera@ait.ac.at
 #
@@ -41,10 +41,8 @@ install_wps:
 install_web:
 	@echo "Setup web page"
 	[ -d $(WEB_DIR) ] || mkdir $(WEB_DIR)
-	install -p web/pywps.cgi $(WEB_DIR)
-	install -p web/jquery-1.10.2.min.js $(WEB_DIR)
-	install -p web/indicators.html $(WEB_DIR)
-	install -p web/OrionListener.py $(WEB_DIR)
+	cp -rpv web/* $(WEB_DIR)
+
 
 clean:
 	rm -rf $(WPS_DIR) $(WEB_DIR)
