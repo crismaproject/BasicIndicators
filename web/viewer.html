@@ -1,7 +1,7 @@
 <DOCTYPE html5>
 <!--
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-14 11:12:38 peter"
+ Time-stamp: "2014-02-18 15:54:56 peter"
 -->
 <!--
     Copyright (C) 2014  AIT / Austrian Institute of Technology
@@ -35,6 +35,7 @@
   <script src="js/d3.v3/d3.v3.js" charset="utf-8"></script>
   <script src="libs/indicatorControllers.js"></script>
   <script src="libs/createWorldStateTree.js"></script>
+  <script src="libs/drawBars.js"></script>
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
@@ -51,8 +52,14 @@
     </table>
 
     <table class="table">
-      <tr><td ng-if="baselineSelected">Select one (click) or more (control klick) WorldStates:</td></tr>
+      <tr><td ng-if="baselineSelected" >Select one (click) or more (control klick) WorldStates:</td></tr>
       <tr><td><div id="worldstate-tree"></div></td></tr>
+    </table>
+
+    <!-- If I try to hide either the table or just td using   ng-if="selectedWorldStates.length" then $scope.byWorldState is NOT updated! -->
+    <table class="table">
+      <tr><td><input type="checkbox" ng-model="byWorldState" ng-change="drawIndicatorBars()"> Group indicators by WorldState</td></tr>
+      <tr><td><div id="indicatorBars"></div></td></tr>
     </table>
 
     <p>

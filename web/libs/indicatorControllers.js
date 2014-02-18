@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-14 11:13:07 peter"
+ Time-stamp: "2014-02-18 15:55:08 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -29,6 +29,8 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
 
     $scope.selectedWorldStates = [];
     $scope.indicators = {};
+
+    $scope.byWorldState = true;
 
     $scope.spinner = new Spinner();
 
@@ -100,10 +102,11 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
 		    if (data != null) {
 			var values = [];
 			for (var i = 0; i < data.entityInstancesProperties.length; i++) {
-			    values.push (data.entityInstancesProperties[i].entityPropertyValue);
+			    values.push (JSON.parse (data.entityInstancesProperties[i].entityPropertyValue));
 			}
 			$scope.indicators[wsIds[index]] = values;
 			// console.log ("indicators: " + JSON.stringify ($scope.indicators));
+			$scope.drawIndicatorBars();
 		    } else {
 			alert ("Got no WorldState data!");
 		    }
@@ -114,6 +117,10 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
 		});
 	    $scope.loadIndicatorValues (wsIds, index + 1);
 	}
+    };
+
+    $scope.drawIndicatorBars = function () {
+	drawIndicators ( "#indicatorBars", $scope.indicators, $scope.byWorldState )
     };
 
     $scope.loadWorldStates();
