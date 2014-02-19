@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-19 08:52:57 peter"
+ Time-stamp: "2014-02-19 14:12:03 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -47,12 +47,18 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
 	    allIndicators[worldstates[k]].forEach (function (d) {
 		if (indicators.indexOf (d.id) >= 0) {
 		    if (d.type === "number") {
-			b.push ({id: d.id, values: [{id: d.id, name: 'value', y0: 0, y1: d.data}], max: d.data});
+			var tip = "WorldState: " + worldstates[k] +
+			    ", Indicator: " + d.description +
+			    "<br>Value: " + d.data;
+			b.push ({id: d.id, values: [{id: d.id, name: 'value', y0: 0, y1: d.data, tip: tip}], max: d.data});
 		    } else if (d.type === "histogram") {
 			var y0 = 0;
 			var vs = [];
 			for (var i = 0; i < d.data.length; i++) {
-			    vs.push ({id: d.id, name: d.data[i].key, y0: y0, y1: y0 +=  d.data[i].value, color: d.data[i].color});
+			    var tip = "WorldState: " + worldstates[k] +
+				", Indicator: " + d.description +
+				"<br>" + d.data[i].desc + ": " + d.data[i].value;
+			vs.push ({id: d.id, name: d.data[i].key, y0: y0, y1: y0 +=  d.data[i].value, color: d.data[i].color, tip: tip});
 			}
 			b.push ({id: d.id, values: vs, max: y0});
 		    }		    
@@ -73,12 +79,18 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
 		    var d = allIndicators[worldstates[k]][j];
 		    if (indicators[i] === d.id) {
 			if (d.type === "number") {
-			    b.push ({id: worldstates[k], values: [{id: worldstates[k], name: 'value', y0: 0, y1: d.data}], max: d.data});
+			    var tip = "WorldState: " + worldstates[k] +
+				", Indicator: " + d.description +
+				"<br>Value: " + d.data;
+			    b.push ({id: worldstates[k], values: [{id: worldstates[k], name: 'value', y0: 0, y1: d.data, tip: tip}], max: d.data});
 			} else if (d.type === "histogram") {
 			    var y0 = 0;
 			    var vs = [];
 			    for (var l = 0; l < d.data.length; l++) {
-				vs.push ({id: worldstates[k], name: d.data[l].key, y0: y0, y1: y0 +=  d.data[l].value, color: d.data[l].color});
+				var tip = "WorldState: " + worldstates[k] +
+				    ", Indicator: " + d.description +
+				    "<br>" + d.data[l].desc + ": " + d.data[l].value;
+				vs.push ({id: worldstates[k], name: d.data[l].key, y0: y0, y1: y0 +=  d.data[l].value, color: d.data[l].color, tip: tip});
 			    }
 			    b.push ({id: d.worldstates[k], values: vs, max: y0});
 			}
@@ -104,6 +116,10 @@ function drawIndicatorBars ( containerName, groups, bars, data ) {
     bars = bars.sort();
 
     $(containerName).empty();
+
+    var div = d3.select(containerName).append("div")   
+	.attr("class", "bar-tooltip")               
+	.style("opacity", 0);
 
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
     width = 960 - margin.left - margin.right,
@@ -172,7 +188,20 @@ function drawIndicatorBars ( containerName, groups, bars, data ) {
 	.attr("height", function(d) { return y(d.y0) - y(d.y1) + 1; })
 	.style("fill", function(d) { return d.color ? d.color : color(d.id); })
 	.style("stroke-width", 2)
-	.style("stroke", function(d) { return color(d.id); });
+	.style("stroke", function(d) { return color(d.id); })
+	.on("mouseover", function(d) {      
+            div.transition()        
+                .duration(200)      
+                .style("opacity", .9);      
+            div.html(d.tip)  
+                .style("left", (d3.event.pageX) + "px")     
+                .style("top", (d3.event.pageY - 28) + "px");    
+            })                  
+        .on("mouseout", function(d) {       
+            div.transition()        
+                .duration(500)      
+                .style("opacity", 0);   
+        });
 
     var legend = svg.selectAll(".legend")
 	.data(bars.slice().reverse())

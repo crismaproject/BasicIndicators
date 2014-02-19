@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2013-10-17
- Time-stamp: "2014-02-11 16:57:11 peter"
+ Time-stamp: "2014-02-19 14:41:55 peter"
 
  See http://blog.pixelingene.com/2011/07/building-a-tree-diagram-in-d3-js/
 
@@ -30,6 +30,12 @@ var selectWSfunc = null;
 function createWorldStateTree(containerName, wsid, list, selectWSfunction, renderOptions) {
     selectWSfunc = selectWSfunction;
     $(containerName).empty();
+
+    // create tool-tip container
+    var div = d3.select(containerName).append("div")   
+	.attr("class", "tree-tooltip")               
+	.style("opacity", 0);
+
     // create tree from WS list
     var treeData = getFromList (wsid, list);
     // console.log (JSON.stringify (treeData));
@@ -121,7 +127,21 @@ function createWorldStateTree(containerName, wsid, list, selectWSfunction, rende
 	    // d3.select(this).attr("class", "node-selected");
 	    // selectWSfunction (d.wsid);
 	    selectNode (d.wsid, d3.event.shiftKey, d3.event.ctrlKey);
-	});
+	})
+	.on("mouseover", function(d) {      
+            div.transition()        
+                .duration(200)      
+                .style("opacity", .9);      
+            div.html(JSON.stringify (d.data))  
+                .style("left", (d3.event.pageX < size.width / 2 ? d3.event.pageX : d3.event.pageX - 600) + "px")     
+                .style("top", (d3.event.pageY - 28) + "px");    
+            })                  
+        .on("mouseout", function(d) {       
+            div.transition()        
+                .duration(500)      
+                .style("opacity", 0);   
+        });
+
 
     nodeGroup.append("svg:text")
         .attr("text-anchor", function(d)
