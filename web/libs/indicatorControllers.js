@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-18 15:55:08 peter"
+ Time-stamp: "2014-02-19 08:40:42 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -30,7 +30,7 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
     $scope.selectedWorldStates = [];
     $scope.indicators = {};
 
-    $scope.byWorldState = true;
+    $scope.groupBy = "worldstate";
 
     $scope.spinner = new Spinner();
 
@@ -83,7 +83,7 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
 
     $scope.selectWorldStates = function (wsIds) {
 	wsIds.sort();
-	console.log ("selectedWorldStates (" + JSON.stringify (wsIds) + ")");
+	// console.log ("selectedWorldStates (" + JSON.stringify (wsIds) + ")");
 	$scope.selectedWorldStates = wsIds;
 	$scope.indicators = {};
 	$scope.loadIndicatorValues ($scope.selectedWorldStates, 0);
@@ -120,7 +120,7 @@ IndicatorApp.controller('IndicatorCtrl', function ($scope, $http) {
     };
 
     $scope.drawIndicatorBars = function () {
-	drawIndicators ( "#indicatorBars", $scope.indicators, $scope.byWorldState )
+	drawIndicators ( "#indicatorBars", $scope.indicators, $scope.groupBy === "worldstate" )
     };
 
     $scope.loadWorldStates();

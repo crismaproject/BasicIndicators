@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-18 15:55:31 peter"
+ Time-stamp: "2014-02-19 08:52:57 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -29,7 +29,7 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
     var indicators = [] //["deathsIndicator", "seriouslyDeterioratedIndicator", "improvedIndicator"];
     for (var k = 0; k < worldstates.length; k++) {
 	allIndicators[worldstates[k]].forEach (function (d) {
-	    if (d.type === "number") {
+	    if ((d.type === "number") || (d.type === "histogram")) {
 		if (indicators.indexOf (d.id) == -1) {
 		    indicators.push (d.id);
 		}
@@ -46,7 +46,16 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
 	    var b = [];
 	    allIndicators[worldstates[k]].forEach (function (d) {
 		if (indicators.indexOf (d.id) >= 0) {
-		    b.push ({id: d.id, value: d.data});
+		    if (d.type === "number") {
+			b.push ({id: d.id, values: [{id: d.id, name: 'value', y0: 0, y1: d.data}], max: d.data});
+		    } else if (d.type === "histogram") {
+			var y0 = 0;
+			var vs = [];
+			for (var i = 0; i < d.data.length; i++) {
+			    vs.push ({id: d.id, name: d.data[i].key, y0: y0, y1: y0 +=  d.data[i].value, color: d.data[i].color});
+			}
+			b.push ({id: d.id, values: vs, max: y0});
+		    }		    
 		}
 	    });
 	    data.push ({group: worldstates[k], bars: b});
@@ -60,11 +69,21 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
 	for (var i = 0; i < indicators.length; i++) {
 	    var b = [];
 	    for (var k = 0; k < worldstates.length; k++) {
-		allIndicators[worldstates[k]].forEach (function (d) {
-		    if (indicators[i] == d.id) {
-			b.push ({id: worldstates[k], value: d.data});
+		for (var j = 0; j < allIndicators[worldstates[k]].length; j++) {
+		    var d = allIndicators[worldstates[k]][j];
+		    if (indicators[i] === d.id) {
+			if (d.type === "number") {
+			    b.push ({id: worldstates[k], values: [{id: worldstates[k], name: 'value', y0: 0, y1: d.data}], max: d.data});
+			} else if (d.type === "histogram") {
+			    var y0 = 0;
+			    var vs = [];
+			    for (var l = 0; l < d.data.length; l++) {
+				vs.push ({id: worldstates[k], name: d.data[l].key, y0: y0, y1: y0 +=  d.data[l].value, color: d.data[l].color});
+			    }
+			    b.push ({id: d.worldstates[k], values: vs, max: y0});
+			}
 		    }
-		});
+		};
 	    }
 	    data.push ({group: indicators[i], bars: b});
 	}
@@ -75,9 +94,14 @@ function drawIndicators ( containerName, allIndicators, byWorldstate ) {
 }
 
 function drawIndicatorBars ( containerName, groups, bars, data ) {
+    /*
+    console.log ("groups: " + JSON.stringify (groups));
+    console.log ("bars:   " + JSON.stringify (bars));
+    console.log ("data:   " + JSON.stringify (data));
+    */
 
-    //groups = groups.sort();
-    //bars = bars.sort().reverse();
+    groups = groups.sort();
+    bars = bars.sort();
 
     $(containerName).empty();
 
@@ -113,10 +137,10 @@ function drawIndicatorBars ( containerName, groups, bars, data ) {
 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-
-    x0.domain(groups)
+    color.domain (bars);
+    x0.domain(groups);
     x1.domain(bars).rangeRoundBands([0, x0.rangeBand()]);
-    y.domain([0, d3.max(data, function(d) { return d3.max(d.bars, function(d) { return d.value; }); })]);
+    y.domain([0, d3.max(data, function(d) { return d3.max(d.bars, function(d) { return d.max; }); })]);
 
     svg.append("g")
 	.attr("class", "x axis")
@@ -139,15 +163,16 @@ function drawIndicatorBars ( containerName, groups, bars, data ) {
 	.attr("class", "g")
 	.attr("transform", function(d) { return "translate(" + x0(d.group) + ",0)"; });
 
-
-    state.selectAll("rect")
-	.data(function(d) { return d.bars; })
-	.enter().append("rect")
+    var subbars = state.selectAll("rect")
+	.data(function(d) { var a = []; d.bars.forEach (function (b) {a = a.concat (b.values);}); return a; })
+        .enter().append("rect")
 	.attr("width", x1.rangeBand())
 	.attr("x", function(d) { return x1(d.id); })
-	.attr("y", function(d) { return y(d.value); })
-	.attr("height", function(d) { return height - y(d.value); })
-	.style("fill", function(d) { return color(d.id); });
+	.attr("y", function(d) { return y(d.y1); })
+	.attr("height", function(d) { return y(d.y0) - y(d.y1) + 1; })
+	.style("fill", function(d) { return d.color ? d.color : color(d.id); })
+	.style("stroke-width", 2)
+	.style("stroke", function(d) { return color(d.id); });
 
     var legend = svg.selectAll(".legend")
 	.data(bars.slice().reverse())

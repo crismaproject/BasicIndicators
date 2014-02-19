@@ -1,7 +1,7 @@
 <DOCTYPE html5>
 <!--
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-18 15:54:56 peter"
+ Time-stamp: "2014-02-19 08:55:46 peter"
 -->
 <!--
     Copyright (C) 2014  AIT / Austrian Institute of Technology
@@ -26,6 +26,7 @@
   <title>Indicator Viewer</title>
   <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/bootstrap.css">
+  <link rel="stylesheet" href="css/bars.css">
   <script src="js/angular.min.js"></script>
   <script src="js/moment.min.js"></script>
   <script src="js/jquery-2.0.3.min.js"></script>
@@ -58,7 +59,8 @@
 
     <!-- If I try to hide either the table or just td using   ng-if="selectedWorldStates.length" then $scope.byWorldState is NOT updated! -->
     <table class="table">
-      <tr><td><input type="checkbox" ng-model="byWorldState" ng-change="drawIndicatorBars()"> Group indicators by WorldState</td></tr>
+<!--      <tr><td><input type="checkbox" ng-model="byWorldState" ng-change="drawIndicatorBars()"> Group indicators by WorldState</td></tr> -->
+      <tr><td>Group by: <input type="radio" ng-model="groupBy" value="worldstate" ng-change="drawIndicatorBars()"> WorldState <input type="radio" ng-model="groupBy" value="indicator" ng-change="drawIndicatorBars()"> Indicator</td></tr>
       <tr><td><div id="indicatorBars"></div></td></tr>
     </table>
 
