@@ -1,7 +1,7 @@
 <DOCTYPE html5>
 <!--
- Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-19 08:55:46 peter"
+ Peter.Kutschera@ait.ac.at, 2014-02-25
+ Time-stamp: "2014-02-28 13:25:28 peter"
 -->
 <!--
     Copyright (C) 2014  AIT / Austrian Institute of Technology
@@ -20,52 +20,60 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/gpl-2.0.html
 -->
-<html lang="en" ng-app="IndicatorApp">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Indicator Viewer</title>
+  <title>Tree Viewer</title>
   <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/bootstrap.css">
-  <link rel="stylesheet" href="css/bars.css">
-  <script src="js/angular.min.js"></script>
+  <script src="js/angular-1.2.13/angular.js"></script>
   <script src="js/moment.min.js"></script>
   <script src="js/jquery-2.0.3.min.js"></script>
   <script src="js/spin.min.js"></script>
   <script src="js/jquery.spin.js"></script>
-  <link rel="stylesheet" href="css/tree.css">
   <script src="js/d3.v3/d3.v3.js" charset="utf-8"></script>
-  <script src="libs/indicatorControllers.js"></script>
-  <script src="libs/createWorldStateTree.js"></script>
-  <script src="libs/drawBars.js"></script>
+  <link rel="stylesheet" href="css/wst-tree.css">
+  <link rel="stylesheet" href="css/wst-indicator-bars.css">
+  <link rel="stylesheet" href="css/wst-indicator-intervals.css">
+  <script src="libs/wstControllers.js"></script>
+  <script src="libs/wst-tree-graph.js"></script>
+  <script src="libs/wst-tree-data.js"></script>
+  <script src="libs/wst-indicator-timeIntervals.js"></script>
+  <script src="libs/wst-indicator-bars.js"></script>
   <!-- bootstrap -->
   <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
   <script src="bootstrap/js/bootstrap.min.js"></script>
 </head>
 
-<body ng-controller="IndicatorCtrl">
+<body>
+
+
+<div ng-app="wstApp" ng-controller="treeCtrl">
     <table class="table">
       <tr>
-	<td id="table">Select a baseline WorldState:</td>
-	<td><select ng-model="baseline" ng-options="s.worldStateId for s in baselines"></select></td>
+	<td>Select a baseline WorldState:</td>
+	<td><select ng-model="baseline" ng-options="s.worldStateId + '/' + s.simulation.description for s in baselines"></select></td>
 	<td><button type="button" class="btn btn-primary" ng-click="createWorldStateTree()">Show WorldState tree</button></td>
       </tr>
+      <tr>
+	<td>Group indicators by:</td>
+	<td><input type="radio" ng-model="groupIndicatorsBy" value="worldstate"> WorldState <input type="radio" ng-model="groupIndicatorsBy" value="indicator"> Indicator</td>
+      </tr>
     </table>
-
     <table class="table">
-      <tr><td ng-if="baselineSelected" >Select one (click) or more (control klick) WorldStates:</td></tr>
-      <tr><td><div id="worldstate-tree"></div></td></tr>
+      <tr>
+	<td><tree-graph base-ws="treeData" on-selection="selectWorldStates(selection)" width="960" min-time="minTime" max-time="maxTime"></tree-graph></td>
+      </tr>
+      <tr>
+	<td><indicator-time-intervals indicator-data="indicators" width="960" min-time="minTime" max-time="maxTime" group-indicators-by="groupIndicatorsBy"></indicator-time-intervals></td>
+      </tr>
+      <tr>
+	<td><indicator-bars indicator-data="indicators" group-indicators-by="groupIndicatorsBy" width="960" height="160"></indicator-bars></td>
+      </tr>
     </table>
-
-    <!-- If I try to hide either the table or just td using   ng-if="selectedWorldStates.length" then $scope.byWorldState is NOT updated! -->
-    <table class="table">
-<!--      <tr><td><input type="checkbox" ng-model="byWorldState" ng-change="drawIndicatorBars()"> Group indicators by WorldState</td></tr> -->
-      <tr><td>Group by: <input type="radio" ng-model="groupBy" value="worldstate" ng-change="drawIndicatorBars()"> WorldState <input type="radio" ng-model="groupBy" value="indicator" ng-change="drawIndicatorBars()"> Indicator</td></tr>
-      <tr><td><div id="indicatorBars"></div></td></tr>
-    </table>
-
+<!--
     <p>
-
       <ul class="indicators" id="list">
 	<li ng-repeat="selectedWorldState in selectedWorldStates">
 	  <h4>Indicator values for WorldState {{selectedWorldState}}:</h4>
@@ -76,8 +84,14 @@
 	  </ul>
 	</li>
       </ul>
-      
-    </p>
+    </p>    
+-->
+
+<!--
+    <button type="button" class="btn btn-primary" ng-click="test()">test</button>
+-->   
+
+</div>
     
 </body>
 </html>
