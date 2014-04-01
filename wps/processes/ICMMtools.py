@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-13
-# Time-stamp: "2014-03-31 13:41:49 peter"
+# Time-stamp: "2014-04-01 15:25:10 peter"
 #
 # Tools to access ICMM
 
@@ -13,10 +13,10 @@ defaultDomain = 'CRISMA'
 
 import json
 import requests
-from types import FunctionType
 import re
 import time
 import math
+import logging
 
 class ICMMAccess:
     def __init__ (self, url):
@@ -65,7 +65,7 @@ def getId (clazz, baseUrl=defaultBaseUrl, domain=defaultDomain):
 
     # Depending on the requests-version json might be an field instead of on method
     # print response.json()
-    jsonData = response.json() if type (response.json) is FunctionType else response.json
+    jsonData = response.json() if callable (response.json) else response.json
 
     maxid = 0;
     collection = jsonData['$collection']
@@ -102,7 +102,7 @@ def getBaseWorldstate (wsid, baseCategory="Baseline", baseUrl=defaultBaseUrl, do
         raise Exception ("No such ICMM WorldState")
 
     # Depending on the requests-version json might be an field instead of on method
-    worldstate = response.json() if type (response.json) is FunctionType else response.json
+    worldstate = response.json() if callable (response.json) else response.json
     while (True):
         if ('categories' in worldstate):
             for c in worldstate['categories']:
@@ -138,7 +138,7 @@ def getOOIRef (wsid, category, name=None, baseUrl=defaultBaseUrl, domain=default
         raise Exception ("No such ICMM WorldState")
 
     # Depending on the requests-version json might be an field instead of on method
-    worldstate = response.json() if type (response.json) is FunctionType else response.json
+    worldstate = response.json() if callable(response.json) else response.json
 
     dataitems = worldstate['worldstatedata']
     for d in dataitems:
@@ -179,7 +179,7 @@ def addIndicatorToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl,
         raise Exception ("No such ICMM WorldState")
 
     # Depending on the requests-version json might be an field instead of on method
-    worldstate = response.json() if type (response.json) is FunctionType else response.json
+    worldstate = response.json() if callable (response.json) else response.json
 
     # check if the indicator is already in the ICMM worldstate
     if (worldstate['worldstatedata'] is not None):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-14
-# Time-stamp: "2014-03-21 13:07:02 peter"
+# Time-stamp: "2014-04-01 15:24:26 peter"
 #
 # Tools to access OOI
 
@@ -19,7 +19,6 @@ indicatorEntityId = 101
 
 import json
 import requests
-from types import FunctionType
 import re
 import time
 import math
@@ -57,7 +56,7 @@ def getJson (url, params=None, headers={'content-type': 'application/json'}):
         raise Exception ("Error accessing OOI-WSR at {}: {}".format (urllib.quote (entityProperties.url), "No such entityProperties"))
     if entityProperties.text == "":
         raise Exception ("Error accessing OOI-WSR at {}: {}".format (urllib.quote (entityProperties.url), "No such entityProperties"))
-    jsonData = entityProperties.json() if type (entityProperties.json) is FunctionType else entityProperties.json
+    jsonData = entityProperties.json() if callable (entityProperties.json) else entityProperties.json
     return jsonData
 
 
@@ -110,7 +109,7 @@ def storeIndicatorValue (wsid, indicatorPropertyId, indicatorValue, indicatorURL
         result = requests.post ("{}/{}".format (baseurl, "EntityProperty"), data=json.dumps (indicatorProperty), headers={'content-type': 'application/json'})
         if result.status_code != 201:
             raise Exception ("Unable to POST result at {}/{}: {}".format (baseurl, "EntityProperty", result.status_code))
-        resultData = result.json() if type (result.json) is FunctionType else result.json
+        resultData = result.json() if callable (result.json) else result.json
         newResult = resultData[u'entityPropertyId']
         indicatorURL = "{}/{}/{}".format (baseurl, "EntityProperty", newResult)
     else:

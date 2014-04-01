@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-03-31 14:01:20 peter"
+Time-stamp: "2014-04-01 15:24:38 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -47,7 +47,6 @@ from sys import stderr
 import json
 import requests
 import urllib
-from types import FunctionType
 from xml.sax.saxutils import escape
 import time
 import logging

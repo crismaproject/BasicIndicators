@@ -4,9 +4,9 @@ var x2js = new X2JS();
 
 wpsApp.controller ('wpsCtrl', function ($scope, $http) {
     // test system:
-    $scope.wpsEndpoint = "https://pinguin2.ait.ac.at/~peter/indicators/pywps.cgi";
+    // $scope.wpsEndpoint = "http://pinguin2.ait.ac.at/~peter/indicators/pywps.cgi";
     // production system
-    // $scope.wpsEndpoint = "https://crisma.ait.ac.at/indicators/pywps.cgi";
+    $scope.wpsEndpoint = "http://crisma.ait.ac.at/indicators/pywps.cgi";
 
     // list of indicators from WPS capabilities - to be updated from WPS Capabilities
     $scope.indicators = [];  // ["deathsIndicator", "seriouslyDeterioratedIndicator", "improvedIndicator", "lifeIndicator"];
