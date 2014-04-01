@@ -1,1 +1,1 @@
-__all__=['lifeIndicator', 'deathsIndicator', 'seriouslyDeterioratedIndicator', 'improvedIndicator']
+__all__=['deathsIndicator', 'seriouslyDeterioratedIndicator', 'improvedIndicator', 'lifeIndicator']
