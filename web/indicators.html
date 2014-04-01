@@ -3,7 +3,7 @@
 /home/peter/public_html/wps/indicators.html
 Peter Kutschera, Wed Sep 11 12:43:30 2013$
 $Id$
-Time-stamp: "2014-02-14 11:19:34 peter"
+Time-stamp: "2014-03-21 12:59:20 peter"
 Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
 -->
 
@@ -25,94 +25,114 @@ Peter.Kutschera@ait.ac.at   (AIT - Austrian Institute of Technology)
     along with this program.  If not, see http://www.gnu.org/licenses/gpl-2.0.html
 -->
 
-<html>
+<html lang="en">
 <head>
-<meta name="Author" content="Peter.Kutschera@ait.ac.at">
-<title>Indicators test-page</title>
-<style type="text/css">
- <!--
-  .big { font-size:20pt }
- -->
-</style>
-<script src="js/jquery-2.0.3.min.js"></script>
-<script type="text/javascript">
-  $(document).ready(function(){
-    $("#describe").click(function(){
-     var indicator = $("#indicator").val();
-     var url = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=DescribeProcess&version=1.0.0&identifier=" + indicator;
-     window.open (url); 
-    });
-    $("#execute").click(function(){
-     var indicator = $("#indicator").val();
-     var wsid = $("#wsid").val();
-     var url = "http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=" + indicator + "&datainputs=WorldStateId=" + wsid;
-     window.open (url); 
-    });
-  });
-</script>
+  <meta charset="utf-8">
+  <meta name="Author" content="Peter.Kutschera@ait.ac.at">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indicators test-page</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <script src="js/angular-1.2.13/angular.js"></script>
+  <script src="js/jquery-2.0.3.min.js"></script>
+  <script src="js/spin.min.js"></script>
+  <script src="js/jquery.spin.js"></script>
+  <script src="libs/wpsControllers.js"></script>
+  <!-- bootstrap -->
+  <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+  <script src="bootstrap/js/bootstrap.min.js"></script>
+  <style type="text/css">
+    <!--
+	.big { font-size:20pt }
+      -->
+  </style>
 </head>
-<body>
-<H1><center>
-<a href="http://www.crismaproject.eu/">CRISMA</a> Indicator Test Page
-</center></H1>
-<hr>
-<p>
+<body ng-app="wpsApp" ng-controller="wpsCtrl">
+<div class="container">
+  <H1><center>
+      <a href="http://www.crismaproject.eu/">CRISMA</a> Indicator Test Page
+  </center></H1>
+  <hr>
+  <p>
 
-This example asks the Pilot C Object-Of-Interest WorldState Repository (OOI-WSR) server for entities for a given WorldState.
-The indicator is calculated for this WorldState.
-The result is stored (in the moment in the same WorldState repository) and the URI of the result is returned by the WPS
+    This example asks the Pilot C Object-Of-Interest WorldState Repository (OOI-WSR) server for entities for a given WorldState.
+    The indicator is calculated for this WorldState.
+    The result is stored (in the moment in the same WorldState repository) and the URI of the result is returned by the WPS
+  </p>
+  <p>
+    <h3>Workflow (For the indicator, but it is the same for most external simulation models):</h3>
+    <ol>
+      <li> Request to indicator service (PyWPS in this case) to calculate an indicater for a particular WorldState.
+      <li> To calculate the indicator input data is needed. But only the indicator service knows which one is needed. So instead of pushing the input data (well, all data!) to the model the model asks for (and only for) whatever it needs (from OOI-WSR using CRISMA REST interface)
+      <li> Model calculates indicator value and stores it in OOI-WSR
+      <li> Model (WPS) returns URI to access result
+    </ol>
 
-<p>
-<h3>Workflow (For the indicator, but it is the same for most external simulation models):</h3>
-<ol>
-<li> Request to indicator service (PyWPS in this case) to calculate an indicater for a particular WorldState.
-<li> To calculate the indicator input data is needed. But only the indicator service knows which one is needed. So instead of pushing the input data (well, all data!) to the model the model asks for (and only for) whatever it needs (from OOI-WSR using CRISMA REST interface)
-<li> Model calculates indicator value and stores it in OOI-WSR
-<li> Model (WPS) returns URI to access result
-</ol>
+    More details can be found in <a href="https://crisma-cat.ait.ac.at/component/lifeIndicator">the CRISMA catalogue</a>.
+  </p>
 
-More details can be found in <a href="https://crisma-cat.ait.ac.at/component/lifeIndicator">the CRISMA catalogue</a>.
+  <h3>Access to the indicators (WPS):</h3>
 
-<h3>Access to the indicators (WPS):</h3>
-<ol>
-<li> <a href='http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=GetCapabilities'>GetCapabilities</a> describes the WPS instance and lists all models (e.g. indicators) available
-  <br> Indicator to use: 
-   <select id='indicator'>
-     <option>lifeIndicator</option>
-     <option selected>deathsIndicator</option>
-     <option>seriouslyDeterioratedIndicator</option>
-     <option>improvedIndicator</option>
-   </select>
-<li> <button id='describe'>DescribeProcess</button> delivers a description of the selecteIndicator process (indicator)
-<li> 
-WordStateId=
-<input type="text" id="wsid" value="1"> 
-<br>
-<button id='execute'>Execute</button> the selected indicator process for the given WorldState
-</ol>
+  <form class="form-horizontal" role="form">
+    <div class="form-group">
+      <label for="capabilities">Get a description of the WPS instance and list of all processes (e.g. indicators) available</label>
+      <p class="form-control-static" id="capabilities">
+	<a href='{{wpsEndpoint}}?service=WPS&request=GetCapabilities' target='GetCapabilities'>{{wpsEndpoint}}?service=WPS&request=GetCapabilities</a>
+      </p>
+    </div>
+    
+    <div class="form-group">
+      <label for="iselect">Select process (indicator) to use</label>
+      <select id="iselect" class="form-control" ng-model="indicator" ng-options="indi for indi in indicators"></select>
+    </div>
+    
+    
+    <div class="form-group">
+      <label for="describe">Get a description of the selected process (indicator)</label>
+      <p class="form-control-static" id="describe">
+	<a href='{{wpsEndpoint}}?service=WPS&request=DescribeProcess&version=1.0.0&identifier={{indicator}}' target='DescribeProcess'>{{wpsEndpoint}}?service=WPS&request=DescribeProcess&version=1.0.0&identifier={{indicator}}</a>
+      </p>
+    </div>
+    
+    
+    <div class="form-group">
+      <label for="icmm">Select ICMM worldstate URL to use</label>
+      <input id="icmm" class="form-control" type="url" ng-model="worldstateUrl" required></input> 
+    </div>
+    
+    
+    <div class="form-group">
+      <label for="execute">Execute the selected process (indicator) with the given ICMM worldstate URL as parameter</label>
+      <p class="form-control-static" id="execute">
+	<a href='{{wpsEndpoint}}?service=WPS&request=Execute&version=1.0.0&identifier={{indicator}}&datainputs=ICMMworldstateURL={{worldstateUrl}}' target='Execute'>{{wpsEndpoint}}?service=WPS&request=Execute&version=1.0.0&identifier={{indicator}}&datainputs=ICMMworldstateURL={{worldstateUrl}}</a>
+      </p>
+    </div>
+    
+  </form>
+  
 
+  <p>
+    See <a href='http://crisma-ooi/swaggerui/'>WorldState repository</a> for valid WorldState URIs.
+  </p>
+  <p>
+    See <a href="http://wiki.rsg.pml.ac.uk/pywps/Main_Page">PyWPS WIKI</a> for details about the used WPS server.
+  </p>
+  <hr>
+  <a href='http://www.ait.ac.at/meta-menu/impressum/' title='Impressum', target="Impressum">Impressum</a>
+  <p>
+    <div style="font-size:12px;">
+      <!--
+      Request from: <!--#echo var="REMOTE_ADDR" -->
+      <br>
+      Server instance: <!--#echo var="SERVER_ADDR" -->
+      <br>
+      -->
+      Last update: <a href="mailto:Peter.Kutschera@ait.ac.at">Peter Kutschera</a>, Seibersdorf, 2014-03-21
+    </div>
+  </p>
 
-Execute-example: <a href='http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIndicator&datainputs=WorldStateId=1'>http://crisma.ait.ac.at/indicators/pywps.cgi?service=WPS&request=Execute&version=1.0.0&identifier=lifeIindicator&datainputs=WorldStateId=1</a>
-
-<p>
-
-See <a href='http://crisma-ooi/swaggerui/'>WorldState repository</a> for valid WorldState URIs.
-
-<p>
-
-See <a href="http://wiki.rsg.pml.ac.uk/pywps/Main_Page">PyWPS WIKI</a> for details about the used WPS server.
-
-<hr>
-<a href='http://www.ait.ac.at/meta-menu/impressum/' title='Impressum', target="Impressum">Impressum</a>
-<p>
-<div style="font-size:12px;">
-Request from: <!--#echo var="REMOTE_ADDR" -->
-<br>
-Server instance: <!--#echo var="SERVER_ADDR" -->
-<br>
-Last update: <a href="mailto:Peter.Kutschera@ait.ac.at">Peter Kutschera</a>, Seibersdorf, 2014-02-06
 </div>
-
 </body>
 </html>
 
