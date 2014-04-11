@@ -30,8 +30,13 @@ wpsApp.controller ('wpsCtrl', function ($scope, $http) {
 		    var processes = response.Capabilities.ProcessOfferings.Process;
 		    var indicators = [];
 
-		    for (var i = 0; i < processes.length; i++) {
-			indicators.push (processes[i].Identifier.__text);
+		    if (Array.isArray (processes)) {
+			for (var i = 0; i < processes.length; i++) {
+			    indicators.push (processes[i].Identifier.__text);
+			}
+		    } else {
+			// let's asum tere is at least one process!
+			indicators.push (processes.Identifier.__text);
 		    }
 		    $scope.indicators = indicators;
 		    $scope.indicator = $scope.indicators.length > 0 ? $scope.indicators[0] : null;
