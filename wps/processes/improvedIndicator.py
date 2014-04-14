@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-01 15:23:36 peter"
+Time-stamp: "2014-04-14 12:54:51 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -79,7 +79,7 @@ class Process(WPSProcess):
                                          type = type (""),
                                          title = "indicator value")
         # for ICMM and OOI
-        self.indicatorPropertyId = 61  # deathsIndicator
+        self.indicatorPropertyId = 63  # improvedIndicator
         self.doUpdate = 1              # 1: recalculate existing indicator; 0: use existing value
         self.ICMMworldstate = None     # Access-object for ICMM WorldState
         self.OOIworldstate = None      # Access-object for OOI WorldState
