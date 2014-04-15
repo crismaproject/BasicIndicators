@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-01 15:23:50 peter"
+Time-stamp: "2014-04-15 11:16:32 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -83,6 +83,7 @@ class Process(WPSProcess):
         self.doUpdate = 1              # 1: recalculate existing indicator; 0: use existing value
         self.ICMMworldstate = None     # Access-object for ICMM WorldState
         self.OOIworldstate = None      # Access-object for OOI WorldState
+        self.worldstateDescription = None  # description of WorldState: ICMMname, ICMMdescription, ICMMworldstateURL, OOIworldstateURL
 
     def calculateIndicator(self):
         # calculate indicator value
@@ -130,6 +131,7 @@ class Process(WPSProcess):
             'id': "lifeIndicator",
             'name': "health status summary",
             'description': "Life status categoized and summed up per category",
+            "worldstateDescription": self.worldstateDescription,
             'worldstates': [self.OOIworldstate.id],
             'type': "histogram",
             'data': [
@@ -137,25 +139,25 @@ class Process(WPSProcess):
                     "key": "dead",
                     "value": numberOfPatients['dead'],
                     "desc": "life status below 10",
-                    "color": "#000000"
+                    "cssClass": "indicator-lifeIndicator-black"
                     },
                 {
                     "key": "red",
                     "value": numberOfPatients['red'],
                     "desc" : "life status 10..50",
-                    "color" : "#ff0000"
+                    "cssClass": "indicator-lifeIndicator-red"
                     },
                 {
                     "key" : "yellow",
                     "value" : numberOfPatients['yellow'],
                     "desc" : "life status 50..85",
-                    "color" : "yellow"
+                    "cssClass": "indicator-lifeIndicator-yellow"
                     },
                 {
                     'key': "green",
                     "value" : numberOfPatients['green'],
                     'desc' : "live status 85 or better",
-                    "color" : "#00FF00"
+                    "cssClass": "indicator-lifeIndicator-green"
                     }
                 ]
             }
@@ -183,10 +185,14 @@ class Process(WPSProcess):
         if (self.ICMMworldstate.endpoint is None):
             return "invalid ICMM ref: {}".format (self.ICMMworldstate)
         
+        self.worldstateDescription = ICMM.getNameDescription (self.ICMMworldstate.id, baseUrl=self.ICMMworldstate.endpoint)
+        self.worldstateDescription["ICMMworldstateURL"] = ICMMworldstateURL
+
         OOIworldstateURL = ICMM.getOOIRef (self.ICMMworldstate.id, 'OOI-worldstate-ref', baseUrl=self.ICMMworldstate.endpoint)
         logging.info ("OOIworldstateURL = {}".format (OOIworldstateURL))
         if (OOIworldstateURL is None):
             return "invalid OOI URL: {}".format (OOIworldstateURL)
+        self.worldstateDescription["OOIworldstateURL"] = OOIworldstateURL
         
         # OOI-URL -> Endpoint, id, ...
         self.OOIworldstate = OOI.OOIAccess(OOIworldstateURL)

@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-28 13:06:10 peter"
+ Time-stamp: "2014-04-15 09:56:26 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -145,8 +145,9 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .attr("x", function(d) { return x1(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 		    .attr("y", function(d) { return y(d.y1); })
 		    .attr("height", function(d) { return y(d.y0) - y(d.y1) + 1; })
-		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
-		    .style("stroke-width", 2)
+//		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
+		    .attr ("class", function(d) { return d.cssClass })
+		    .style("stroke-width", 5)
 		    .style("stroke", function(d) { return color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 		    .on("mouseover", function(d) {      
 			div.transition()        
@@ -205,7 +206,8 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .duration(500)
 		    .attr("width", x1.rangeBand())
 		    .attr("x", function(d) { return x1(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
-		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
+//		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
+		    .attr ("class", function(d) { return d.cssClass })
 		    .style("stroke", function(d) { return color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 
 		xAxisSvg
@@ -332,7 +334,8 @@ WstApp.directive ('indicatorBars', function ($parse) {
 					    + ", Indicator: " + indi.description
 					    + "<br>Value: " + indi.data,
 					iId : indi.id,
-					wsId : indi.worldstate
+					wsId : indi.worldstate,
+					cssClass: "indicator-" + indi.id
 				    };
 				    indi.max = bars[0].y1;
 				} else if ("histogram" === indi.type) {
@@ -343,10 +346,10 @@ WstApp.directive ('indicatorBars', function ($parse) {
 					    y1 : y0 += indi.data[d].value,
 					    tip : "WorldState: " + indi.worldstate
 						+ ", Indicator: " + indi.description
-						+ "<br>" + indi.data[i].desc + ": " + indi.data[i].value,
+						+ "<br>" + indi.data[d].desc + ": " + indi.data[d].value,
 					    iId : indi.id,
 					    wsId : indi.worldstate,
-					    color : indi.data[d].color
+					    cssClass : indi.data[d].cssClass ? indi.data[d].cssClass : "indicator-" + indi.id + '-' + indi.data[d].key
 					};
 				    }
 				    indi.max = y0;

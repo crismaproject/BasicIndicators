@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-14
-# Time-stamp: "2014-04-01 15:24:26 peter"
+# Time-stamp: "2014-04-15 10:59:05 peter"
 #
 # Tools to access OOI
 
@@ -22,6 +22,7 @@ import requests
 import re
 import time
 import math
+import logging
 
 class OOIAccess:
     def __init__ (self, url):
@@ -81,6 +82,10 @@ def getIndicatorRef (wsid, indicatorPropertyId, baseUrl=defaultBaseUrl):
         existingResults +=1
     if existingResults > 1:
         raise Exception ("There are already {} results! This should not be the case!".format (existingResults))
+        # Just an idea, does not work as is
+        #result = requests.delete("{}/EntityProperty".format (baseUrl), params=params, headers=headers)         
+        #logging.info (result)
+        #exisitingResults = 0;
     if existingResults == 1:
         existingResultId = jsonData[0]['entityPropertyId']
         indicatorURL = "{}/EntityProperty/{}".format (baseUrl, existingResultId)

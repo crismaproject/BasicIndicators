@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-02-28 08:05:08 peter"
+ Time-stamp: "2014-04-15 10:09:16 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -119,7 +119,7 @@ WstApp.directive ('indicatorTimeIntervals', function ($parse) {
 		x.domain ([minTime, maxTime]);
 		y.domain ([0, data.length - 1]);
 
-// data = [{"id":"timeIntervalsTest","name":"Just some test data","description":"List of time intervals","worldstates":[59,81],"type":"timeintervals","data":{"intervals":[{"startTime":"2012-01-01T12:19:00.000","endTime":"2012-01-01T12:24:00.000","startt":"2012-01-01T11:19:00.000Z","endt":"2012-01-01T11:24:00.000Z"},{"startTime":"2012-01-01T12:41:00.000","endTime":"2012-01-01T12:45:00.000","startt":"2012-01-01T11:41:00.000Z","endt":"2012-01-01T11:45:00.000Z"}],"color":"#000000","linewidth":2,"yws":0,"yind":0},"worldstate":"82"}]"
+// data = [{"id":"timeIntervalsTest","name":"Just some test data","description":"List of time intervals","worldstates":[59,81],"type":"timeintervals","data":{"intervals":[{"startTime":"2012-01-01T12:19:00.000","endTime":"2012-01-01T12:24:00.000","startt":"2012-01-01T11:19:00.000Z","endt":"2012-01-01T11:24:00.000Z"},{"startTime":"2012-01-01T12:41:00.000","endTime":"2012-01-01T12:45:00.000","startt":"2012-01-01T11:41:00.000Z","endt":"2012-01-01T11:45:00.000Z"}],"cssClass":"indicators-timeIntervallsTest","linewidth":2,"yws":0,"yind":0},"worldstate":"82"}]"
 
 		indicator = svg.selectAll(".indicator-intervals")
 		    .data(data)
@@ -143,7 +143,8 @@ WstApp.directive ('indicatorTimeIntervals', function ($parse) {
 		    .attr("height", options.fontSize + 4)
 		    .attr("x", function(d) { return x(d.startt); })
 		    .attr("y", 0)
-		    .style("fill", function(d) { return d.color ? d.color : "#cccccc"; })
+//		    .style("fill", function(d) { return d.color ? d.color : "#cccccc"; })
+		    .attr ("class", function(d) { return d.cssClass })
 		    .style("opacity", .7)
 		    .on("mouseover", function(d) {      
 			div.transition()        
@@ -245,7 +246,8 @@ WstApp.directive ('indicatorTimeIntervals', function ($parse) {
  			if (!calculatedMaxTime || calculatedMaxTime < n.endt) {
 			    calculatedMaxTime = n.endt;
 			}
-			n.color = indicators[i].data.color;
+			//n.color = indicators[i].data.color;
+			n.cssClass = indicators[i].data.cssClass ? indicators[i].data.cssClass : "indicator-" + indicators[i].id;
 		    }
 		}
 		data = indicators;

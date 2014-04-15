@@ -77,7 +77,7 @@ WstApp.controller ('treeCtrl', function ($scope, $http) {
 	}
     };
 
-
+    // 2014-04-15: in the following color is replaced by cssClass; default is indicators-indicatorId[-key]
     var testIndicators = {
 	"82":[
 	    {"worldstates":[81],"description":"Number of patients with life status less then 20","data":0,"type":"number","id":"deathsIndicator","name":"Deaths"},

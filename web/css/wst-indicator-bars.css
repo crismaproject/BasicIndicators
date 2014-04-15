@@ -31,3 +31,28 @@ div.indicator-bars-tooltip {
   border-radius: 8px;           
   pointer-events: none;         
 }
+
+.indicator-deathIndicator {
+    fill: black;
+}
+
+.indicator-seriouslyDeterioratedIndicator {
+    fill: gray;
+}
+
+.indicator-improvedIndicator {
+    fill: green;
+}
+
+.indicator-lifeIndicator-black {
+    fill: black;
+}
+.indicator-lifeIndicator-red {
+    fill: red;
+}
+.indicator-lifeIndicator-yellow {
+    fill: yellow;
+}
+.indicator-lifeIndicator-green {
+    fill: green;
+}

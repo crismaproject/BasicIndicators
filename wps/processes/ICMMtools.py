@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-13
-# Time-stamp: "2014-04-01 15:25:10 peter"
+# Time-stamp: "2014-04-15 11:15:02 peter"
 #
 # Tools to access ICMM
 
@@ -77,6 +77,36 @@ def getId (clazz, baseUrl=defaultBaseUrl, domain=defaultDomain):
             if (id > maxid):
                 maxid = id
     return maxid + 1
+
+
+def getNameDescription (wsid, baseUrl=defaultBaseUrl, domain=defaultDomain):
+    """Get name and description of worldstate id
+    
+    """
+    # http://crisma.cismet.de/pilotC/icmm_api/CRISMA.worldstates/3?level=1&fields=name%2Cdescription&omitNullValues=true&deduplicate=true
+    # get (grand*)parent worldstate list
+    params = {
+        'level' :  1,
+        'fields' : "name,description",
+        'omitNullValues' : 'true',
+        'deduplicate' : 'true'
+        }
+    headers = {'content-type': 'application/json'}
+    response = requests.get("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers) 
+
+    if response.status_code != 200:
+        raise Exception ("Error accessing ICMM at {}: {}".format (response.url, response.status_code))
+    if response.text is None:
+        raise Exception ("No such ICMM WorldState")
+    if response.text == "":
+        raise Exception ("No such ICMM WorldState")
+
+    # Depending on the requests-version json might be an field instead of on method
+    worldstate = response.json() if callable (response.json) else response.json
+    return {
+        'ICMMname' : worldstate["name"],
+        'ICMMdescription' : worldstate["description"]
+        }
 
 def getBaseWorldstate (wsid, baseCategory="Baseline", baseUrl=defaultBaseUrl, domain=defaultDomain):
     """Get parent worldstate id with given category or None

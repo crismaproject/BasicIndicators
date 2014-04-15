@@ -37,3 +37,12 @@ indicator-interval {
   border-radius: 8px;           
   pointer-events: none;         
 }
+
+
+.indicator-timeIntervalsTest {
+    fill: #00cc00;
+}
+
+.indicator-timeIntervalsTest2 {
+    fill: #0000cc;
+}
