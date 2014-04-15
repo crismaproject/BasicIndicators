@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-15 12:49:32 peter"
+Time-stamp: "2014-04-15 15:04:24 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -234,7 +234,7 @@ class Process(WPSProcess):
 
         self.status.set("Store indicator reference in ICMM", 90)
 
-        ICMMindicatorURL = ICMM.addIndicatorToICMM (self.ICMMworldstate.id, self.identifier, self.title, indicatorURL, self.ICMMworldstate.endpoint)
+        ICMMindicatorURL = ICMM.addIndicatorRefToICMM (self.ICMMworldstate.id, self.identifier, self.title, indicatorURL, self.ICMMworldstate.endpoint)
             
         self.ooi.setValue(escape (indicatorURL))
         self.icmm.setValue(escape (ICMMindicatorURL))

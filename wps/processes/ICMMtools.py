@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-13
-# Time-stamp: "2014-04-15 11:15:02 peter"
+# Time-stamp: "2014-04-15 15:22:44 peter"
 #
 # Tools to access ICMM
 
@@ -181,19 +181,18 @@ def getOOIRef (wsid, category, name=None, baseUrl=defaultBaseUrl, domain=default
                     return "{}/{}/{}".format(service['endpoint'], access['resource'], access['id'])
     return None
 
-
-def addIndicatorToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl, domain=defaultDomain):
+def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl, domain=defaultDomain):
     """Add an reference to an indicator value stored in the OOS-WSR
 
     wsid: id within ICMM
-    ooiref: {id:193838, resource:EntityProperty}
+    ooiref: URL into OOI-WSR
 
     returns: ICMM indicator URL (dataitem)
     """
     # Get worldstate 
     ICMMindicatorURL = None
     params = {
-        'level' :  1,
+        'level' :  2,
         'fields' : "worldstatedata,name,categories",
         'omitNullValues' : 'true',
         'deduplicate' : 'true'
@@ -216,7 +215,7 @@ def addIndicatorToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl,
         for d in worldstate['worldstatedata']:
             if ('categories' in d):
                 for c in d['categories']:
-                    if ((c['$ref'] == "/{}.categories/3".format (domain)) and (d.name == name)):
+                    if ((c['$ref'] == "/{}.categories/3".format (domain)) and (d['name'] == name)):
                         ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
                         return ICMMindicatorURL
                         
@@ -240,8 +239,8 @@ def addIndicatorToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl,
         "datadescriptor": {
             "$ref": "/{}.datadescriptors/1".format (domain)
             },
-        "actualaccessinfocontenttype": "application/json",
-        "actualaccessinfo": json.dumps (ooiref),
+        "actualaccessinfocontenttype": "text/plain",
+        "actualaccessinfo": ooiref,
         "lastmodified": t
         }
 
@@ -269,14 +268,115 @@ def addIndicatorToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseUrl,
 
 
 
+def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUrl, domain=defaultDomain):
+    """Add an reference to an indicator value stored in the OOS-WSR
+
+    wsid: id within ICMM
+    value: indicator-value as json structure
+
+    returns: ICMM indicator URL (dataitem)
+    """
+    # Get worldstate 
+    ICMMindicatorURL = None
+    params = {
+        'level' :  2,
+        'fields' : "worldstatedata,name,categories",
+        'omitNullValues' : 'true',
+        'deduplicate' : 'true'
+        }
+    headers = {'content-type': 'application/json'}
+    response = requests.get("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers) 
+
+    if response.status_code != 200:
+        raise Exception ("Error accessing ICMM at {}: {}".format (response.url, response.raise_for_status()))
+    if response.text is None:
+        raise Exception ("No such ICMM WorldState")
+    if response.text == "":
+        raise Exception ("No such ICMM WorldState")
+
+    # Depending on the requests-version json might be an field instead of on method
+    worldstate = response.json() if callable (response.json) else response.json
+
+    ICMMindicatorURL = None
+    # check if the indicator is already in the ICMM worldstate
+    if (worldstate['worldstatedata'] is not None):
+        for d in worldstate['worldstatedata']:
+            if ('categories' in d):
+                for c in d['categories']:
+                    if ((c['$ref'] == "/{}.categories/3".format (domain)) and (d['name'] == name)):
+                        # An indicator value with the given name is already there - TODO: update value
+                        d['actualaccessinfo'] = json.dumps (value)
+                        ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
+    
+    if (ICMMindicatorURL is None):
+        # not found, do some work...
+
+        # add dataitem to worldstate
+        #   I need a new dataitems id
+        dataitemsId = getId ("dataitems");
+        t = time.time() * 1000
+        
+        data = {
+            "$self": "/{}.dataitems/{}".format (domain, dataitemsId),
+            "id": dataitemsId,
+            "name": name,
+            "description": description,
+            "categories": [
+                {
+                    "$ref": "/{}.categories/3".format (domain)
+                    }
+                ],
+            "datadescriptor": {
+                "$ref": "/{}.datadescriptors/1".format (domain)
+                },
+            "actualaccessinfocontenttype": "application/json",
+            "actualaccessinfo": json.dumps (value),
+            "lastmodified": t
+            }
+        
+        if ('worldstatedata' in worldstate):
+            worldstate['worldstatedata'].append (data)
+        else:
+            worldstate['worldstatedata'] = [ data ]
+        ICMMindicatorURL = "{}/{}.dataitems/{}".format (baseUrl, domain, dataitemsId)
+    else:
+        # worldstate['worldstatedata'] already updated up there: d['actualaccessinfo'] = json.dumps (value)
+        pass
+
+
+    # store worldstate back
+    params = {
+        'level' :  1,
+        'fields' : "worldstatedata",
+        'omitNullValues' : 'true',
+        'deduplicate' : 'true'
+        }
+    response = requests.put("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers, data=json.dumps (worldstate)) 
+
+    if response.status_code != 200:
+        raise Exception ("Error writing worldstate to ICMM at {}: {}".format (response.url, response.raise_for_status()))
+    # This is now stored in ICMM: response.json()
+
+    return ICMMindicatorURL    
+
+
+
 
 
 if __name__ == "__main__":
     for c in ["worldstates", "transitions", "dataitems"]:
         print "{}: {}".format (c, getId (c)) 
-    # print addIndicatorToICMM (1, "testIndicator", "description of test indicator", {"id":193838, "resource":"EntityProperty"}) 
-    print getOOIRef (1, 'OOI-worldstate-ref')  # http://crisam-ooi.ait.ac.at/api/worldstate/335
+    # print addIndicatorRefToICMM (1, "testIndicator", "description of test indicator", {"id":193838, "resource":"EntityProperty"}) 
+    # print getOOIRef (1, 'OOI-worldstate-ref')  # http://crisam-ooi.ait.ac.at/api/worldstate/335
     # print getOOIRef (2, 'OOI-worldstate-ref')  # Exception: No such ICMM WorldState
-    print getOOIRef (67, 'OOI-worldstate-ref') # None
-    print getOOIRef (1, 'OOI-indicator-ref', 'testIndicator') # http://crisam-ooi.ait.ac.at/api/EntityProperty/193838
+    # print getOOIRef (67, 'OOI-worldstate-ref') # None
+    # print getOOIRef (1, 'OOI-indicator-ref', 'testIndicator') # http://crisam-ooi.ait.ac.at/api/EntityProperty/193838
+    print addIndicatorValToICMM (2, "testIndicatorValue", "description of test indicator", 
+                                 {"id": "testIndicatorValue",
+                                  "name": "test value",
+                                  "description": "Some Description",
+                                  "worldstateDescription": {"ICMMworldstateURL": "http://crisma.cismet.de/pilotC/icmm_api/CRISMA.worldstates/2", "ICMMdescription": "This is a test baseline.", "ICMMname": "Test baseline"}, 
+                                  "type": "number",
+                                  "data": 50
+                                  })
 
