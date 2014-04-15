@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-04-15 10:09:16 peter"
+ Time-stamp: "2014-04-15 14:44:30 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -228,7 +228,7 @@ WstApp.directive ('indicatorTimeIntervals', function ($parse) {
 				scope.allIndicators[wss[w]][i].data.yws = yws;
 				yws++;
 				scope.allIndicators[wss[w]][i].data.yind = yind;
-				yind += wss.length;
+				yind += wss.length; // this assumes that all worldstates have all indicators!
 				indicators.push (scope.allIndicators[wss[w]][i]);
 			    }
 			}

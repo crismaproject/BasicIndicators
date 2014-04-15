@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-14 12:55:25 peter"
+Time-stamp: "2014-04-15 12:48:05 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -164,6 +164,7 @@ class Process(WPSProcess):
             'id': "seriouslyDeterioratedIndicator",
             'name': "Seriously deteriorated",
             'description': "Number of patients with actual life status less then base life status - 50",
+            "worldstateDescription": self.worldstateDescription,
             'worldstates': [baseOOIworldstate.id, self.OOIworldstate.id],
             'type': "number",
             'data': numberOfDeteriorated
@@ -194,11 +195,15 @@ class Process(WPSProcess):
         logging.info ("ICMMworldstate = {}".format (self.ICMMworldstate))
         if (self.ICMMworldstate.endpoint is None):
             return "invalid ICMM ref: {}".format (self.ICMMworldstate)
-        
+
+        self.worldstateDescription = ICMM.getNameDescription (self.ICMMworldstate.id, baseUrl=self.ICMMworldstate.endpoint)
+        self.worldstateDescription["ICMMworldstateURL"] = ICMMworldstateURL
+      
         OOIworldstateURL = ICMM.getOOIRef (self.ICMMworldstate.id, 'OOI-worldstate-ref', baseUrl=self.ICMMworldstate.endpoint)
         logging.info ("OOIworldstateURL = {}".format (OOIworldstateURL))
         if (OOIworldstateURL is None):
             return "invalid OOI URL: {}".format (OOIworldstateURL)
+        self.worldstateDescription["OOIworldstateURL"] = OOIworldstateURL
         
         # OOI-URL -> Endpoint, id, ...
         self.OOIworldstate = OOI.OOIAccess(OOIworldstateURL)

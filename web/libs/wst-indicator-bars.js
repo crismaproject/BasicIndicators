@@ -1,6 +1,6 @@
 /*
  Peter.Kutschera@ait.ac.at, 2014-02-11
- Time-stamp: "2014-04-15 09:56:26 peter"
+ Time-stamp: "2014-04-15 14:18:09 peter"
 
     Copyright (C) 2014  AIT / Austrian Institute of Technology
     http://www.ait.ac.at
@@ -73,7 +73,7 @@ WstApp.directive ('indicatorBars', function ($parse) {
 
 	    var margin = {top: 20, right: 20, bottom: 30, left: 40};
 	    var width, height;
-	    var svg, x0, x1, y, color, groups, bars, legend, xAxis, xAxisSvg;
+	    var svg, x0, x1, y, color, groups, bars, legend, xAxisSvg;
 
 	    function redraw () {
 		graph.select('svg').remove();
@@ -92,9 +92,11 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		color = d3.scale.ordinal()
 		    .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 
-		xAxis = d3.svg.axis()
+		var xAxis = d3.svg.axis()
 		    .scale(x0)
 		    .orient("bottom");
+// The following does not work for groupBy indicator. I have no idea why!
+//		    .tickValues (scope.groupBy === "worldstate" ? data_wss.map (function(d){return data_wss_names[d];}) : data_inds.map(function(d){return data_inds_names[d]}));
 
 		var yAxis = d3.svg.axis()
 		    .scale(y)
@@ -145,7 +147,6 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .attr("x", function(d) { return x1(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 		    .attr("y", function(d) { return y(d.y1); })
 		    .attr("height", function(d) { return y(d.y0) - y(d.y1) + 1; })
-//		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 		    .attr ("class", function(d) { return d.cssClass })
 		    .style("stroke-width", 5)
 		    .style("stroke", function(d) { return color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
@@ -181,14 +182,21 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .attr("y", 9)
 		    .attr("dy", ".35em")
 		    .style("text-anchor", "end")
-		    .text(function(d) { return d; });
+		    .text(function(d) { return scope.groupBy === "worldstate" ? data_inds_names[d] : data_wss_names[d]; });
 
 	    };
 
 	    function rearrange () {
 
-		legend.remove();
+		console.log ('data_inds_names = ' + JSON.stringify (data_inds_names));
 
+		var xAxis = d3.svg.axis()
+		    .scale(x0)
+		    .orient("bottom");
+// The following does not work for groupBy indicator. I have no idea why!
+//		    .tickValues (scope.groupBy === "worldstate" ? data_wss.map (function(d){return data_wss_names[d];}) : data_inds.map(function(d){console.log (d + ' --> ' + data_inds_names[d]); return data_inds_names[d];}));
+
+		legend.remove();
 
 		color.domain (scope.groupBy === "worldstate" ? data_inds : data_wss);
 		x0.domain    (scope.groupBy === "worldstate" ? data_wss : data_inds);
@@ -206,8 +214,6 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .duration(500)
 		    .attr("width", x1.rangeBand())
 		    .attr("x", function(d) { return x1(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
-//		    .style("fill", function(d) { return d.color ? d.color : color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
-		    .attr ("class", function(d) { return d.cssClass })
 		    .style("stroke", function(d) { return color(scope.groupBy === "worldstate" ? d.iId : d.wsId); })
 
 		xAxisSvg
@@ -230,7 +236,7 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		    .attr("y", 9)
 		    .attr("dy", ".35em")
 		    .style("text-anchor", "end")
-		    .text(function(d) { return d; });
+		    .text(function(d) { return scope.groupBy === "worldstate" ? data_inds_names[d] : data_wss_names[d]; });
 
 	    }
 
@@ -257,20 +263,24 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		if (wss.length == 0) {
 		    return;
 		}
+		var wssn = {};
+		for (var w = 0; w < wss.length; w++) {
+		    wssn[wss[w]] = scope.allIndicators[wss[w]][0].worldstateDescription ? scope.allIndicators[wss[w]][0].worldstateDescription.ICMMname + "(" + wss[w] + ")" : wss[w];
+		}
 		// list of indicators
-		var inds = {};
+		var indsn = {};
 		for (var w = 0; w < wss.length; w++) {
 		    for (var i = 0; i < scope.allIndicators[wss[w]].length; i++) {
 			// filter by indicator id
 			if ((scope.indicatorFilter == null) || (scope.indicatorFilter.indexOf (scope.allIndicators[wss[w]][i].id) != -1)) {
 			    // filter by indicator type - keep only what I know how to visualize
 			    if (["number", 'histogram'].indexOf (scope.allIndicators[wss[w]][i].type) != -1) {
-				inds[scope.allIndicators[wss[w]][i].id] = 1;
+				indsn[scope.allIndicators[wss[w]][i].id] = scope.allIndicators[wss[w]][i].name ? scope.allIndicators[wss[w]][i].name : scope.allIndicators[wss[w]][i].id;  
 			    }
 			}
 		    }
 		}
-		inds = d3.keys (inds);
+		var inds = d3.keys (indsn);
 		console.log ('buildDataset: inds = ' + JSON.stringify (inds));
 		if (inds.length == 0) {
 		    return;
@@ -299,6 +309,7 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		  {
 		    "id":"lifeIndicator",
 		    "worldstate" : 81,
+		    "worldstateDescription": { ICMMname: "some name", ICMMdescription: "some desc", ICMMworldstateURL: "some url", OOIworldstateURL: "some other url"},
 		    "type":"histogram",
 		    "name":"health status summary"
 		    bars : [
@@ -362,7 +373,10 @@ WstApp.directive ('indicatorBars', function ($parse) {
 		}
 		data = indicators;
 		data_wss = wss;
+		data_wss_names = wssn;
+		console.log ('data_wss_names = ' + JSON.stringify (data_wss_names));
 		data_inds = inds;
+		data_inds_names = indsn;
 		console.log ('buildDataset: data = ' + JSON.stringify (data));
 	    };
 

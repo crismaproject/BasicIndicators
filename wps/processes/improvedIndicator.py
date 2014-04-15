@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-14 12:54:51 peter"
+Time-stamp: "2014-04-15 12:49:32 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -83,6 +83,7 @@ class Process(WPSProcess):
         self.doUpdate = 1              # 1: recalculate existing indicator; 0: use existing value
         self.ICMMworldstate = None     # Access-object for ICMM WorldState
         self.OOIworldstate = None      # Access-object for OOI WorldState
+        self.worldstateDescription = None  # description of WorldState: ICMMname, ICMMdescription, ICMMworldstateURL, OOIworldstateURL
 
     def calculateIndicator(self):
         self.status.set("Start collecting input data", 20)
@@ -164,6 +165,7 @@ class Process(WPSProcess):
             'id': "improvedIndicator",
             'name': "improved",
             'description': "Number of patients with actual life status better or equal then base life status",
+            "worldstateDescription": self.worldstateDescription,
             'worldstates': [baseOOIworldstate.id, self.OOIworldstate.id],
             'type': "number",
             'data': numberOfImproved
@@ -195,10 +197,14 @@ class Process(WPSProcess):
         if (self.ICMMworldstate.endpoint is None):
             return "invalid ICMM ref: {}".format (self.ICMMworldstate)
         
+        self.worldstateDescription = ICMM.getNameDescription (self.ICMMworldstate.id, baseUrl=self.ICMMworldstate.endpoint)
+        self.worldstateDescription["ICMMworldstateURL"] = ICMMworldstateURL
+
         OOIworldstateURL = ICMM.getOOIRef (self.ICMMworldstate.id, 'OOI-worldstate-ref', baseUrl=self.ICMMworldstate.endpoint)
         logging.info ("OOIworldstateURL = {}".format (OOIworldstateURL))
         if (OOIworldstateURL is None):
             return "invalid OOI URL: {}".format (OOIworldstateURL)
+        self.worldstateDescription["OOIworldstateURL"] = OOIworldstateURL
         
         # OOI-URL -> Endpoint, id, ...
         self.OOIworldstate = OOI.OOIAccess(OOIworldstateURL)
