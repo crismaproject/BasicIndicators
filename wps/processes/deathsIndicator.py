@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-15 15:04:15 peter"
+Time-stamp: "2014-04-24 14:46:50 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -72,9 +72,12 @@ class Process(WPSProcess):
         self.ooi=self.addLiteralOutput(identifier = "OOIindicatorURL",
                                           type = type (""),
                                           title = "URL to access indicator from OOI")
-        self.icmm=self.addLiteralOutput(identifier = "ICMMindicatorURL",
+        self.icmmRef=self.addLiteralOutput(identifier = "ICMMindicatorRefURL",
                                           type = type (""),
-                                          title = "URL to access indicator from ICMM")
+                                          title = "URL to access indicator reference from ICMM")
+        self.icmmVal=self.addLiteralOutput(identifier = "ICMMindicatorValueURL",
+                                          type = type (""),
+                                          title = "URL to access indicator value from ICMM")
         self.value=self.addLiteralOutput(identifier = "value",
                                          type = type (""),
                                          title = "indicator value")
@@ -186,13 +189,15 @@ class Process(WPSProcess):
             logging.info ("indicatorData: {}".format (json.dumps (indicatorData)))
             self.value.setValue (json.dumps (indicatorData))
 
+            ICMMindicatorValueURL = ICMM.addIndicatorValToICMM (self.ICMMworldstate.id, self.identifier, self.title, indicatorData, self.ICMMworldstate.endpoint)
+            self.icmmVal.setValue(escape (ICMMindicatorValueURL))
+
             indicatorURL = OOI.storeIndicatorValue (self.OOIworldstate.id, self.indicatorPropertyId, indicatorData, indicatorURL, self.OOIworldstate.endpoint)
 
         self.status.set("Store indicator reference in ICMM", 90)
-
         ICMMindicatorURL = ICMM.addIndicatorRefToICMM (self.ICMMworldstate.id, self.identifier, self.title, indicatorURL, self.ICMMworldstate.endpoint)
             
         self.ooi.setValue(escape (indicatorURL))
-        self.icmm.setValue(escape (ICMMindicatorURL))
+        self.icmmRef.setValue(escape (ICMMindicatorURL))
         return
 

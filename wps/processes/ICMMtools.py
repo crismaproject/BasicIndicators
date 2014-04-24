@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-13
-# Time-stamp: "2014-04-15 15:22:44 peter"
+# Time-stamp: "2014-04-24 15:01:02 peter"
 #
 # Tools to access ICMM
 
@@ -14,7 +14,8 @@ defaultDomain = 'CRISMA'
 import json
 import requests
 import re
-import time
+#import time
+import datetime
 import math
 import logging
 
@@ -224,7 +225,8 @@ def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseU
     # add dataitem to worldstate
     #   I need a new dataitems id
     dataitemsId = getId ("dataitems");
-    t = time.time() * 1000
+    # t = time.time() * 1000
+    t = datetime.datetime.utcnow().isoformat()
 
     data = {
         "$self": "/{}.dataitems/{}".format (domain, dataitemsId),
@@ -239,7 +241,7 @@ def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseU
         "datadescriptor": {
             "$ref": "/{}.datadescriptors/1".format (domain)
             },
-        "actualaccessinfocontenttype": "text/plain",
+        "actualaccessinfocontenttype": "URL",
         "actualaccessinfo": ooiref,
         "lastmodified": t
         }
@@ -269,7 +271,7 @@ def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseU
 
 
 def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUrl, domain=defaultDomain):
-    """Add an reference to an indicator value stored in the OOS-WSR
+    """Add an indicator value 
 
     wsid: id within ICMM
     value: indicator-value as json structure
@@ -297,15 +299,19 @@ def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUr
     # Depending on the requests-version json might be an field instead of on method
     worldstate = response.json() if callable (response.json) else response.json
 
+    # t = time.time() * 1000
+    t = datetime.datetime.utcnow().isoformat()
+
     ICMMindicatorURL = None
     # check if the indicator is already in the ICMM worldstate
     if (worldstate['worldstatedata'] is not None):
         for d in worldstate['worldstatedata']:
             if ('categories' in d):
                 for c in d['categories']:
-                    if ((c['$ref'] == "/{}.categories/3".format (domain)) and (d['name'] == name)):
+                    if ((c['$ref'] == "/{}.categories/4".format (domain)) and (d['name'] == name)):
                         # An indicator value with the given name is already there - TODO: update value
                         d['actualaccessinfo'] = json.dumps (value)
+                        d["lastmodified"] = t
                         ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
     
     if (ICMMindicatorURL is None):
@@ -314,7 +320,6 @@ def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUr
         # add dataitem to worldstate
         #   I need a new dataitems id
         dataitemsId = getId ("dataitems");
-        t = time.time() * 1000
         
         data = {
             "$self": "/{}.dataitems/{}".format (domain, dataitemsId),
@@ -323,7 +328,7 @@ def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUr
             "description": description,
             "categories": [
                 {
-                    "$ref": "/{}.categories/3".format (domain)
+                    "$ref": "/{}.categories/4".format (domain)
                     }
                 ],
             "datadescriptor": {
