@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-24 14:46:50 peter"
+Time-stamp: "2014-05-07 14:25:21 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -112,11 +112,11 @@ class Process(WPSProcess):
                 continue 
             # The entityTypePropertyType might be a lie
             try:
-                life = int (ep["entityPropertyValue"])
+                life = float (ep["entityPropertyValue"].replace (",", "."))
                 if life < requiredLifePropertyValue:
                     numberOfDeaths += 1;
             except:
-                logging.error (ep["entityPropertyValue"], " is not an integer!")
+                logging.error ("Patient life property is not an integer: '{}'".format (ep["entityPropertyValue"]))
                 # ignore problem !?!?
                 pass
         

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 """ 
- receive events from orion Pub/Sup (XML POST requests)
- Calculate indicator values:
-  lifeIndicator
- Send PubSub event about new data
+ receive events from orion Pub/Sup (JSON POST requests)
+ Calculate indicator values using WPS
 """
 
 """
@@ -53,6 +51,7 @@ listener="http://crisma.ait.ac.at/indicators/OrionListener.py"
 subscriptionIdFile = "/home/crisma/public_html/indicators/subscription.json"
 
 # if invoked as command: register as PubSub listener
+# Production use: set duration to 2 years (P2Y) instead of 5 minutes (PT5M) for short-term testing
 if ((len (sys.argv) > 1) and ((sys.argv[1] == "--unsubscribe") or (sys.argv[1] == "--subscribe"))):
     # is there a subscription id from the last subscription stored? If so unsubscribe!
     if (os.path.exists (subscriptionIdFile)):
@@ -82,7 +81,7 @@ if ((len (sys.argv) > 1) and ((sys.argv[1] == "--unsubscribe") or (sys.argv[1] =
                     }
                 ],
             "reference": listener,
-            "duration": "PT5M",
+            "duration": "P2Y",
             "notifyConditions": [
                 {
                     "type": "ONCHANGE",
@@ -127,48 +126,60 @@ elems = notification["contextResponses"]
 for elem in elems:
     for attr in elem["contextElement"]["attributes"]:
         if attr["name"].startswith ("worldstate"):
-            wsURL = attr["value"]["URI"]
+            value = attr["value"]
+            # print >>sys.stderr, "value1={} ({})".format (value, type (value))
+            if (isinstance (value, str)):
+                value = json.loads (value)
+                # print >>sys.stderr, "value2={}".format (value)
+            if (isinstance (value, unicode)):
+                value = json.loads (value)
+                # print >>sys.stderr, "value3={}".format (value)
+            wsURL = value["URI"]
             for indicator in indicators:
-                print >>stderr, "Start indicator {} for {}".format (indicator, wsURL)
+                print >>sys.stderr, "Start indicator {} for {}".format (indicator, wsURL)
                 response = requests.get(wps.format (indicator, wsURL))
-                print >>stderr, response.text
+                print >>sys.stderr, response.text
             
 
 exit (0)
 
-
+"""
 exampleNotification = {
-   "subscriptionId" : "5357b2b3000000dea5adf59d",
-   "originator" : "localhost",
-   "contextResponses" : [
-     {
-       "contextElement" : {
-         "type" : "CRISMA.worldstates",
-         "isPattern" : "false",
-         "id" : "1_2",
-         "attributes" : [
-           {
-             "name" : "time",
-             "type" : "",
-             "value" : "1398256494"
-           },
-           {
-             "name" : "worldstate_Baseline",
-             "type" : "Test baseline",
-             "value" : "{\\"operation\\":\\"updated\\",\\"time\\":1398256494,\\"URI\\":\\"http://crisma.cismet.de/pilotC/icmm_api/CRISMA.worldstates/2\\"}"
-           },
-           {
-             "name" : "dataslot_OOI-worldstate-ref",
-             "type" : "Test baseline",
-             "value" : "{\\"operation\\":\\"created\\",\\"time\\":1398256492,\\"URI\\":\\"http://crisma.cismet.de/pilotC/icmm_api/CRISMA.dataitems/3\\"}"
-           }
-         ]
-       },
-       "statusCode" : {
-         "code" : "200",
-         "reasonPhrase" : "OK"
-       }
-     }
-   ]
- }
-
+    "subscriptionId" : "5357b2b3000000dea5adf59d",
+    "originator" : "localhost",
+    "contextResponses" : [
+        {
+            "contextElement" : {
+                "type" : "CRISMA.worldstates",
+                "isPattern" : "false",
+                "id" : "1_2",
+                "attributes" : [
+                    {
+                        "name" : "time",
+                        "type" : "",
+                        "value" : "1398256494"
+                        },
+                    {
+                        "name" : "worldstate_Baseline",
+                        "type" : "Test baseline",
+                        "value" : "{\"operation\":\"updated\",\"time\":1398256494,\"URI\":\"http://crisma.cismet.de/pilotC/icmm_api/CRISMA.worldstates/2\"}"
+                        },
+                    {
+                        "name" : "dataslot_OOI-worldstate-ref",
+                        "type" : "Test baseline",
+                        "value" : {
+                            "operation":"created",
+                            "time":1398256492,
+                            "URI":"http://crisma.cismet.de/pilotC/icmm_api/CRISMA.dataitems/3"
+                            }
+                        }
+                    ]
+                },
+            "statusCode" : {
+                "code" : "200",
+                "reasonPhrase" : "OK"
+                }
+            }
+        ]
+    }
+"""

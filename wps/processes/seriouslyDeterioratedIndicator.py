@@ -1,6 +1,6 @@
 """
 Peter Kutschera, 2013-09-11
-Time-stamp: "2014-04-24 15:04:03 peter"
+Time-stamp: "2014-05-07 14:26:35 peter"
 
 The server gets an ICMM worldstate URL and calculates an indicator
 
@@ -139,7 +139,7 @@ class Process(WPSProcess):
                 continue 
             # The entityTypePropertyType might be a lie
             try:
-                life = int (ep["entityPropertyValue"])
+                life = float (ep["entityPropertyValue"].replace (",", "."))
                 patients[ep["entityId"]] = life
             except:
                 # print >> stderr, ep["entityPropertyValue"], " is not an integer!"
@@ -152,7 +152,7 @@ class Process(WPSProcess):
                 continue 
             # The entityTypePropertyType might be a lie
             try:
-                life = int (ep["entityPropertyValue"])
+                life = float (ep["entityPropertyValue"].replace (",", "."))
                 if life < patients[ep["entityId"]] - 50:
                     numberOfDeteriorated += 1
             except:
