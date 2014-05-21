@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Peter.Kutschera@ait.ac.at, 2014-03-13
-# Time-stamp: "2014-05-08 09:08:05 peter"
+# Time-stamp: "2014-05-21 13:59:55 peter"
 #
 # Tools to access ICMM
 
@@ -15,6 +15,7 @@ import json
 import requests
 import re
 #import time
+import string
 import datetime
 import math
 import logging
@@ -144,6 +145,153 @@ def getBaseWorldstate (wsid, baseCategory="Baseline", baseUrl=defaultBaseUrl, do
         worldstate =  worldstate['parentworldstate']
     return None # never reach this, just to see the end of the function.
 
+
+
+def getIndicatorURL (wsid, name, baseUrl=defaultBaseUrl, domain=defaultDomain):
+    """Get an indicator URL - None if there is no such indicator 
+
+    wsid: id within ICMM
+
+    returns: ICMM indicator URL (dataitem)
+    """
+    # Get worldstate 
+    ICMMindicatorURL = None
+    params = {
+        'level' :  2,
+        'fields' : "worldstatedata,name,categories",
+        'omitNullValues' : 'true',
+        'deduplicate' : 'true'
+        }
+    headers = {'content-type': 'application/json'}
+    response = requests.get("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers) 
+
+    if response.status_code != 200:
+        raise Exception ("Error accessing ICMM at {}: {}".format (response.url, response.status_code))
+    if response.text is None:
+        raise Exception ("No such ICMM WorldState")
+    if response.text == "":
+        raise Exception ("No such ICMM WorldState")
+
+    # Depending on the requests-version json might be an field instead of on method
+    worldstate = response.json() if callable (response.json) else response.json
+
+    # t = time.time() * 1000
+    t = datetime.datetime.utcnow().isoformat()
+
+    ICMMindicatorURL = None
+    # check if the indicator is already in the ICMM worldstate
+    if (worldstate['worldstatedata'] is not None):
+        for d in worldstate['worldstatedata']:
+            if ('categories' in d):
+                for c in d['categories']:
+                    if ((c['$ref'] == "/{}.categories/4".format (domain)) and (d['name'] == name)):
+                        # An indicator value with the given name is already there
+                        ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
+    return ICMMindicatorURL
+
+
+def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUrl, domain=defaultDomain):
+    """Add an indicator value 
+
+    wsid: id within ICMM
+    value: indicator-value as json structure
+
+    returns: ICMM indicator URL (dataitem)
+    """
+    # Get worldstate 
+    ICMMindicatorURL = None
+    params = {
+        'level' :  2,
+        'fields' : "worldstatedata,name,categories",
+        'omitNullValues' : 'true',
+        'deduplicate' : 'true'
+        }
+    headers = {'content-type': 'application/json'}
+    response = requests.get("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers) 
+
+    if response.status_code != 200:
+        raise Exception ("Error accessing ICMM at {}: {}".format (response.url, response.status_code))
+    if response.text is None:
+        raise Exception ("No such ICMM WorldState")
+    if response.text == "":
+        raise Exception ("No such ICMM WorldState")
+
+    # Depending on the requests-version json might be an field instead of on method
+    worldstate = response.json() if callable (response.json) else response.json
+
+    # t = time.time() * 1000
+    t = datetime.datetime.utcnow().isoformat()
+
+    ICMMindicatorURL = None
+    # check if the indicator is already in the ICMM worldstate
+    if (worldstate['worldstatedata'] is not None):
+        for d in worldstate['worldstatedata']:
+            if ('categories' in d):
+                for c in d['categories']:
+                    if ((c['$ref'] == "/{}.categories/4".format (domain)) and (d['name'] == name)):
+                        # An indicator value with the given name is already there - TODO: update value
+                        ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
+                        logging.info ("Update indicator found at " + ICMMindicatorURL)
+                        data = {
+                            '$self': d['$self'],
+                            'actualaccessinfo': json.dumps (value),
+                            'lastmodified': t
+                            }
+                        # store dataitem back
+                        params = {}
+                        response = requests.put(ICMMindicatorURL, params=params, headers=headers, data=json.dumps (data)) 
+                        if response.status_code != 200:
+                            raise Exception ("Error writing dataitem to ICMM at {}: {}".format (response.url, response.status_code))   
+                        return ICMMindicatorURL    
+                        
+    # New indicator in this worldstate
+    dataitemsId = getId ("dataitems", baseUrl=baseUrl);
+        
+    data = {
+        "$self": "/{}.dataitems/{}".format (domain, dataitemsId),
+        "id": dataitemsId,
+        "name": name,
+        "description": description,
+        "categories": [
+            {
+                "$ref": "/{}.categories/4".format (domain)
+                }
+            ],
+        "datadescriptor": {
+            "$ref": "/{}.datadescriptors/3".format (domain)
+            },
+        "actualaccessinfocontenttype": "application/json",
+        "actualaccessinfo": json.dumps (value),
+        "lastmodified": t
+        }
+        
+    wsdata = []
+    if ('worldstatedata' in worldstate):
+        for wsd in worldstate['worldstatedata']:
+            wsdata.append ({'$ref': wsd['$self']})
+    wsdata.append (data)
+    ws = {
+        '$self' : worldstate['$self'],
+        'worldstatedata' : wsdata
+        }
+    ICMMindicatorURL = "{}/{}.dataitems/{}".format (baseUrl, domain, dataitemsId)
+
+    # store worldstate back
+    params = {}
+    response = requests.put("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers, data=json.dumps (ws)) 
+
+    # Check why ICMM is not always sending events
+    logging.info ("AddIndicatorToICMM: PUT {}/{}.{}/{} -- DATA = {}".format (baseUrl, domain, "worldstates", wsid, json.dumps (ws).replace ("\n", ""))) 
+
+    if response.status_code != 200:
+        raise Exception ("Error writing worldstate to ICMM at {}: {}".format (response.url, response.status_code))
+    # This is now stored in ICMM: response.json()
+
+    return ICMMindicatorURL    
+
+##############################
+# Pilot C specific
+
 def getOOIRef (wsid, category, name=None, baseUrl=defaultBaseUrl, domain=defaultDomain):
     """Get the OOI reference within a dataitem contained in an ICMM worldstate
 
@@ -230,7 +378,7 @@ def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseU
 
     # add dataitem to worldstate
     #   I need a new dataitems id
-    dataitemsId = getId ("dataitems")
+    dataitemsId = getId ("dataitems", baseUrl=baseUrl)
     # t = time.time() * 1000
     t = datetime.datetime.utcnow().isoformat()
 
@@ -272,103 +420,58 @@ def addIndicatorRefToICMM (wsid, name, description, ooiref, baseUrl=defaultBaseU
     ICMMindicatorURL = "{}/{}.dataitems/{}".format (baseUrl, domain, dataitemsId)
     return ICMMindicatorURL    
 
+##############################
+# Pilot E specific
 
-
-def addIndicatorValToICMM (wsid, name, description, value, baseUrl=defaultBaseUrl, domain=defaultDomain):
-    """Add an indicator value 
-
-    wsid: id within ICMM
-    value: indicator-value as json structure
-
-    returns: ICMM indicator URL (dataitem)
-    """
-    # Get worldstate 
-    ICMMindicatorURL = None
+def getCaptureData (worldstate):
+    # get CaptureData reference from worldstate 
     params = {
-        'level' :  2,
-        'fields' : "worldstatedata,name,categories",
+        'level' :  5,
+        'fields' : "worldstatedata,datadescriptor,name,defaultaccessinfo,actualaccessinfo",
         'omitNullValues' : 'true',
         'deduplicate' : 'true'
         }
     headers = {'content-type': 'application/json'}
-    response = requests.get("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers) 
-
+    response = requests.get("{}/{}.{}/{}".format (worldstate.endpoint, worldstate.domain, "worldstates", worldstate.id), params=params, headers=headers) 
     if response.status_code != 200:
-        raise Exception ("Error accessing ICMM at {}: {}".format (response.url, response.status_code))
-    if response.text is None:
-        raise Exception ("No such ICMM WorldState")
-    if response.text == "":
-        raise Exception ("No such ICMM WorldState")
-
+        raise Exception ( "Error accessing ICMM at {}: {}".format (response.url, response.status_code))
     # Depending on the requests-version json might be an field instead of on method
-    worldstate = response.json() if callable (response.json) else response.json
+    jsonData = response.json() if callable (response.json) else response.json
+    """
+        {u'worldstatedata': [
+           {
+            u'datadescriptor': 
+             {
+              u'defaultaccessinfo': u'http://crisma.cismet.de/pilotE/icmm_api/CRISMA.exercises/:id?deduplicate=true', 
+              u'name': u'exercise_slot', 
+              u'$self': u'/CRISMA.datadescriptors/2'
+             }, 
+            u'actualaccessinfo': u'1', 
+            u'name': u'Exercise Data', 
+            u'$self': u'/CRISMA.dataitems/1'
+           }], 
+         u'name': u'Ski-Weltmeisterschaften Garmisch-Partenkirchen 1', 
+         u'$self': u'/CRISMA.worldstates/1'
+        }
+    """
+      
+    captureDataURL = None
+    for wsd in jsonData['worldstatedata']:
+        if wsd['name'] == 'Exercise Data':
+            captureDataURL = string.replace (wsd['datadescriptor']['defaultaccessinfo'], ':id', wsd['actualaccessinfo'])
 
-    # t = time.time() * 1000
-    t = datetime.datetime.utcnow().isoformat()
+    if captureDataURL is None:
+        raise Exception ("Capture-data URL not found")
 
-    ICMMindicatorURL = None
-    # check if the indicator is already in the ICMM worldstate
-    if (worldstate['worldstatedata'] is not None):
-        for d in worldstate['worldstatedata']:
-            if ('categories' in d):
-                for c in d['categories']:
-                    if ((c['$ref'] == "/{}.categories/4".format (domain)) and (d['name'] == name)):
-                        # An indicator value with the given name is already there - TODO: update value
-                        d['actualaccessinfo'] = json.dumps (value)
-                        d["lastmodified"] = t
-                        ICMMindicatorURL = "{}{}".format (baseUrl, d['$self'])
-    
-    if (ICMMindicatorURL is None):
-        # not found, do some work...
-
-        # add dataitem to worldstate
-        #   I need a new dataitems id
-        dataitemsId = getId ("dataitems");
-        
-        data = {
-            "$self": "/{}.dataitems/{}".format (domain, dataitemsId),
-            "id": dataitemsId,
-            "name": name,
-            "description": description,
-            "categories": [
-                {
-                    "$ref": "/{}.categories/4".format (domain)
-                    }
-                ],
-            "datadescriptor": {
-                "$ref": "/{}.datadescriptors/3".format (domain)
-                },
-            "actualaccessinfocontenttype": "application/json",
-            "actualaccessinfo": json.dumps (value),
-            "lastmodified": t
-            }
-        
-        if ('worldstatedata' in worldstate):
-            worldstate['worldstatedata'].append (data)
-        else:
-            worldstate['worldstatedata'] = [ data ]
-        ICMMindicatorURL = "{}/{}.dataitems/{}".format (baseUrl, domain, dataitemsId)
-    else:
-        # worldstate['worldstatedata'] already updated up there: d['actualaccessinfo'] = json.dumps (value)
-        pass
-
-
-    # store worldstate back
     params = {}
-    response = requests.put("{}/{}.{}/{}".format (baseUrl, domain, "worldstates", wsid), params=params, headers=headers, data=json.dumps (worldstate)) 
-
-    # Check why ICMM is not always sending events
-    #logging.info ("AddIndicatorToICMM: PUT {}/{}.{}/{} -- DATA = {}".format (baseUrl, domain, "worldstates", wsid, json.dumps (worldstate).replace ("\n", ""))) 
-
+    headers = {'content-type': 'application/json'}
+    response = requests.get(captureDataURL, params=params, headers=headers) 
     if response.status_code != 200:
-        raise Exception ("Error writing worldstate to ICMM at {}: {}".format (response.url, response.status_code))
-    # This is now stored in ICMM: response.json()
-
-    return ICMMindicatorURL    
-
-
-
-
+        raise Exception ( "Error accessing ICMM at {}: {}".format (response.url, response.status_code))
+    # Depending on the requests-version json might be an field instead of on method
+    jsonData = response.json() if callable (response.json) else response.json
+    return jsonData
+        
 
 if __name__ == "__main__":
     for c in ["worldstates", "transitions", "dataitems"]:
