@@ -79,6 +79,9 @@ class Process(Indicator):
                         # logging.info ("t1: " +  t1.isoformat())
                         # logging.info ("t2: " +  t2.isoformat())
 
+        if t1 is None:
+            raise Exception ("Missing input data: not even one triage timestamp found!")
+
         # create indicator value structure
         indicatorData = {
             'id': self.identifier,

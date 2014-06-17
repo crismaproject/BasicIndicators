@@ -75,6 +75,9 @@ class Process(Indicator):
                     if (t2 is None) or (t > t2):
                         t2 = t
 
+        if t1 is None:
+            raise Exception ("Missing input data: not even one treatment_timestamp found!")
+
         # create indicator value structure
         indicatorData = {
             'id': self.identifier,

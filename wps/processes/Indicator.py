@@ -85,15 +85,15 @@ class Indicator(WPSProcess):
 
         # http://crisma.cismet.de/icmm_api/CRISMA.worldstates/1
         ICMMworldstateURL = self.ICMMworldstateURL.getValue()
-        logging.info ("ICMMworldstateURL = {}".format (ICMMworldstateURL))
+        logging.info ("ICMMworldstateURL = {0}".format (ICMMworldstateURL))
         if (ICMMworldstateURL is None):
-            return "invalid ICMM URL: {}".format (ICMMworldstateURL)
+            return "invalid ICMM URL: {0}".format (ICMMworldstateURL)
 
         # ICMM-URL -> Endpoint, id, ...
         self.ICMMworldstate = ICMM.ICMMAccess (ICMMworldstateURL)
-        logging.info ("ICMMworldstate = {}".format (self.ICMMworldstate))
+        logging.info ("ICMMworldstate = {0}".format (self.ICMMworldstate))
         if (self.ICMMworldstate.endpoint is None):
-            return "invalid ICMM ref: {}".format (self.ICMMworldstate)
+            return "invalid ICMM ref: {0}".format (self.ICMMworldstate)
         
         self.worldstateDescription = ICMM.getNameDescription (self.ICMMworldstate.id, baseUrl=self.ICMMworldstate.endpoint)
         self.worldstateDescription["ICMMworldstateURL"] = ICMMworldstateURL
@@ -101,18 +101,18 @@ class Indicator(WPSProcess):
         self.status.set("Check if indicator value already exists", 10)
 
         indicatorURL = ICMM.getIndicatorURL (self.ICMMworldstate.id, self.identifier, baseUrl=self.ICMMworldstate.endpoint)
-        logging.info ("old indicatorURL = {}".format (indicatorURL))
+        logging.info ("old indicatorURL = {0}".format (indicatorURL))
         if (indicatorURL is not None):
-            logging.info ("Indicator value already exists at: {}".format (indicatorURL))
+            logging.info ("Indicator value already exists at: {0}".format (indicatorURL))
 
         if ((self.doUpdate == 1) or (indicatorURL is None)):
             try:
                 indicatorData = self.calculateIndicator ()
             except Exception, e:
-                logging.error ("calculateIndicator: {}".format (str(e.args)))
-                return ("calculateIndicator: {}".format (str(e.args)))
+                logging.error ("calculateIndicator: {0}".format (str(e.args)))
+                return ("calculateIndicator: {0}".format (str(e.args)))
 
-            logging.info ("indicatorData: {}".format (json.dumps (indicatorData)))
+            logging.info ("indicatorData: {0}".format (json.dumps (indicatorData)))
             self.value.setValue (json.dumps (indicatorData))
 
             ICMMindicatorValueURL = ICMM.addIndicatorValToICMM (self.ICMMworldstate.id, self.identifier, self.title, indicatorData, self.ICMMworldstate.endpoint)

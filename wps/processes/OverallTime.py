@@ -50,18 +50,20 @@ class Process(Indicator):
             identifier="OverallTime", #the same as the file name
             version = "1.0",
             title="Overall time",
-            abstract="Incident to last transport")
+            abstract="Reference time to last transport")
 
     def calculateIndicator(self):
         # calculate indicator value
         self.status.set("Start collecting input data", 20)
 
         jsonData = ICMM.getCaptureData (self.ICMMworldstate)
-        # logging.info (jsonData)
+        logging.info (jsonData)
 
-        t1 = dateutil.parser.parse (jsonData['incidentTime'])
+        if not 'referenceTime' in jsonData:
+            raise Exception ("Missing input data: referenceTime")
+        t1 = dateutil.parser.parse (jsonData['referenceTime'])
         # logging.info ("t1: " +  t1.isoformat())
-        t2 = t1
+        t2 = None
 
         for p in jsonData['patients']:
             if 'transportation_timestamp' in p:
@@ -72,8 +74,10 @@ class Process(Indicator):
                         ts = ts + ":00.0Z"
                     t = dateutil.parser.parse (ts)
                     # logging.info ("t:  " +  t.isoformat())
-                    if t > t2:
+                    if (t2 is None) or (t > t2):
                         t2 = t
+        if t2 is None:
+            raise Exception ("Missing input data: not even one transportation_timestamp found!")
         # logging.info ("t2: " +  t2.isoformat())
 
         # create indicator value structure

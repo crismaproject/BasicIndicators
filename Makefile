@@ -1,7 +1,7 @@
 ############################################################
 # /home/peter/_work/CRISMA-sw/indicators-py/Makefile
 # Peter Kutschera, Thu Feb  6 12:42:00 2014
-# Time-stamp: "2014-04-14 12:51:39 peter"
+# Time-stamp: "2014-05-21 14:02:21 peter"
 # 
 # Peter.Kutschera@ait.ac.at
 #
@@ -39,6 +39,12 @@ install_wps:
 	install -p wps/processes/improvedIndicator.py $(WPS_DIR)/processes
 	install -p wps/processes/ICMMtools.py $(WPS_DIR)/processes
 	install -p wps/processes/OOItools.py $(WPS_DIR)/processes
+	install -p wps/processes/Indicator.py $(WPS_DIR)/processes
+	install -p wps/processes/OverallTime.py $(WPS_DIR)/processes
+	install -p wps/processes/PreTriageTime.py $(WPS_DIR)/processes
+	install -p wps/processes/TransportationTime.py $(WPS_DIR)/processes
+	install -p wps/processes/TreatmentTime.py $(WPS_DIR)/processes
+	install -p wps/processes/TriageTime.py $(WPS_DIR)/processes
 
 install_web:
 	@echo "Setup web page"
